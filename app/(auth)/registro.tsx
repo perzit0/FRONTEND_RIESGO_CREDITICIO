@@ -32,30 +32,30 @@ export default function RegistroScreen() {
     }
     setLoading(true);
     try {
-      const res = await apiClient.post('/api/auth/registro', {
-        nombre: form.nombre,
-        dni: form.dni,
-        email: form.email,
-        telefono: `+51${form.telefono}`,
-        password: form.password,
-      });
-      const { usuario_id } = res.data;
-      router.push({
-        pathname: '/(auth)/verificar-correo',
-        params: { usuario_id, email: form.email },
-      });
-    } catch (err: any) {
-      const mensaje = err.response?.data?.error || '';
-      if (mensaje.toLowerCase().includes('email') || mensaje.toLowerCase().includes('correo')) {
-        Alert.alert('Correo ya registrado', 'Este correo ya tiene una cuenta. Intenta iniciar sesión.');
-      } else if (mensaje.toLowerCase().includes('dni')) {
-        Alert.alert('DNI ya registrado', 'Este DNI ya está asociado a una cuenta.');
-      } else {
-        Alert.alert('Error', mensaje || 'No se pudo registrar');
-      }
-    } finally {
-      setLoading(false);
-    }
+  const res = await apiClient.post('/api/auth/registro', {
+    nombre: form.nombre,
+    dni: form.dni,
+    email: form.email,
+    telefono: `+51${form.telefono}`,
+    password: form.password,
+  });
+  const { usuario_id } = res.data;
+  console.log('Registro exitoso, usuario_id:', usuario_id);
+  router.push({
+    pathname: '/(auth)/verificar-correo',
+    params: { usuario_id, email: form.email },
+  });
+} catch (err: any) {
+  console.log('Error registro:', err.response?.data);
+  const mensaje = err.response?.data?.error || '';
+  if (mensaje.toLowerCase().includes('email') || mensaje.toLowerCase().includes('correo')) {
+    Alert.alert('Correo ya registrado', 'Este correo ya tiene una cuenta. Intenta iniciar sesión.');
+  } else if (mensaje.toLowerCase().includes('dni')) {
+    Alert.alert('DNI ya registrado', 'Este DNI ya está asociado a una cuenta.');
+  } else {
+    Alert.alert('Error', mensaje || 'No se pudo registrar');
+  }
+}
   }
 
   return (

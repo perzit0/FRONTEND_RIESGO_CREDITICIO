@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://backend-riesgo-crediticio.onrender.com';
+const BASE_URL = 'http://localhost:5000';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
