@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import apiClient from '../../data/api/client';
-import { obtenerToken } from '../../storage/secureStorage';
+import secrets from 'expo-crypto';
 
 export default function PerfilScreen() {
   const router = useRouter();
@@ -13,10 +13,7 @@ export default function PerfilScreen() {
   const [loading, setLoading] = useState(true);
   const [seccion, setSeccion] = useState<'inicio' | 'nombre' | 'password' | 'telefono'>('inicio');
 
-  // Nombre
   const [nuevoNombre, setNuevoNombre] = useState('');
-
-  // Password
   const [codigoPassword, setCodigoPassword] = useState('');
   const [nuevaPassword, setNuevaPassword] = useState('');
   const [confirmarPassword, setConfirmarPassword] = useState('');
@@ -24,7 +21,6 @@ export default function PerfilScreen() {
   const [verPassword, setVerPassword] = useState(false);
   const [verConfirmar, setVerConfirmar] = useState(false);
 
-  // Telefono
   const [nuevoTelefono, setNuevoTelefono] = useState('');
   const [codigoCorreo, setCodigoCorreo] = useState('');
   const [codigoSms, setCodigoSms] = useState('');
@@ -38,10 +34,8 @@ export default function PerfilScreen() {
 
   async function cargarPerfil() {
     try {
-      const token = await obtenerToken();
-      const res = await apiClient.get('/api/user/mi-perfil', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // El interceptor agrega el token automáticamente
+      const res = await apiClient.get('/api/user/mi-perfil');
       setPerfil(res.data);
       setNuevoNombre(res.data.nombre);
     } catch { }
@@ -55,10 +49,7 @@ export default function PerfilScreen() {
     if (!nuevoNombre.trim()) { setError('El nombre no puede estar vacío'); return; }
     setGuardando(true);
     try {
-      const token = await obtenerToken();
-      await apiClient.post('/api/user/actualizar-nombre', { nombre: nuevoNombre }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiClient.post('/api/user/actualizar-nombre', { nombre: nuevoNombre });
       setExito('Nombre actualizado correctamente');
       setPerfil((p: any) => ({ ...p, nombre: nuevoNombre }));
       setTimeout(() => setSeccion('inicio'), 1500);
@@ -71,10 +62,7 @@ export default function PerfilScreen() {
     resetMensajes();
     setGuardando(true);
     try {
-      const token = await obtenerToken();
-      await apiClient.post('/api/user/solicitar-cambio-password', {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await apiClient.post('/api/user/solicitar-cambio-password', {});
       setPasswordPaso(2);
       setExito('Te enviamos un código a tu correo');
     } catch (err: any) {
@@ -88,12 +76,11 @@ export default function PerfilScreen() {
     if (nuevaPassword.length < 8) { setError('Mínimo 8 caracteres'); return; }
     setGuardando(true);
     try {
-      const token = await obtenerToken();
       await apiClient.post('/api/user/confirmar-cambio-password', {
         codigo: codigoPassword,
         nueva_password: nuevaPassword,
         confirmar_password: confirmarPassword,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      });
       setExito('Contraseña actualizada correctamente');
       setTimeout(() => { setSeccion('inicio'); setPasswordPaso(1); }, 1500);
     } catch (err: any) {
@@ -106,10 +93,9 @@ export default function PerfilScreen() {
     if (!nuevoTelefono) { setError('Ingresa el nuevo número'); return; }
     setGuardando(true);
     try {
-      const token = await obtenerToken();
       await apiClient.post('/api/user/solicitar-cambio-telefono', {
-        nuevo_telefono: nuevoTelefono,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+        nuevo_telefono: `+51${nuevoTelefono}`,
+      });
       setTelefonoPaso(2);
       setExito('Te enviamos un código a tu correo');
     } catch (err: any) {
@@ -121,10 +107,7 @@ export default function PerfilScreen() {
     resetMensajes();
     setGuardando(true);
     try {
-      const token = await obtenerToken();
-      await apiClient.post('/api/user/confirmar-cambio-telefono', {
-        codigo_correo: codigoCorreo,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      await apiClient.post('/api/user/confirmar-cambio-telefono', { codigo_correo: codigoCorreo });
       setTelefonoPaso(3);
       setExito('Correo confirmado. Te enviamos un SMS al nuevo número');
     } catch (err: any) {
@@ -136,12 +119,9 @@ export default function PerfilScreen() {
     resetMensajes();
     setGuardando(true);
     try {
-      const token = await obtenerToken();
-      await apiClient.post('/api/user/verificar-nuevo-telefono', {
-        codigo_sms: codigoSms,
-      }, { headers: { Authorization: `Bearer ${token}` } });
+      await apiClient.post('/api/user/verificar-nuevo-telefono', { codigo_sms: codigoSms });
       setExito('Teléfono actualizado correctamente');
-      setPerfil((p: any) => ({ ...p, telefono: nuevoTelefono }));
+      setPerfil((p: any) => ({ ...p, telefono: `+51${nuevoTelefono}` }));
       setTimeout(() => { setSeccion('inicio'); setTelefonoPaso(1); }, 1500);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Código SMS inválido');
@@ -169,27 +149,22 @@ export default function PerfilScreen() {
       {error ? <View style={styles.errorBox}><Text style={styles.errorText}>{error}</Text></View> : null}
       {exito ? <View style={styles.exitoBox}><Text style={styles.exitoText}>{exito}</Text></View> : null}
 
-      {/* ── INICIO ── */}
+      {/* INICIO */}
       {seccion === 'inicio' && (
         <>
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Información personal</Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Nombre</Text>
-              <Text style={styles.infoValue}>{perfil?.nombre}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Correo</Text>
-              <Text style={styles.infoValue}>{perfil?.email}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>DNI</Text>
-              <Text style={styles.infoValue}>{perfil?.dni}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Teléfono</Text>
-              <Text style={styles.infoValue}>{perfil?.telefono}</Text>
-            </View>
+            {[
+              { label: 'Nombre', value: perfil?.nombre },
+              { label: 'Correo', value: perfil?.email },
+              { label: 'DNI', value: perfil?.dni },
+              { label: 'Teléfono', value: perfil?.telefono },
+            ].map(({ label, value }) => (
+              <View key={label} style={styles.infoRow}>
+                <Text style={styles.infoLabel}>{label}</Text>
+                <Text style={styles.infoValue}>{value}</Text>
+              </View>
+            ))}
           </View>
 
           <View style={styles.card}>
@@ -210,7 +185,7 @@ export default function PerfilScreen() {
         </>
       )}
 
-      {/* ── NOMBRE ── */}
+      {/* NOMBRE */}
       {seccion === 'nombre' && (
         <View style={styles.card}>
           <TouchableOpacity onPress={() => setSeccion('inicio')} style={styles.backBtn}>
@@ -231,7 +206,7 @@ export default function PerfilScreen() {
         </View>
       )}
 
-      {/* ── PASSWORD ── */}
+      {/* PASSWORD */}
       {seccion === 'password' && (
         <View style={styles.card}>
           <TouchableOpacity onPress={() => setSeccion('inicio')} style={styles.backBtn}>
@@ -296,7 +271,7 @@ export default function PerfilScreen() {
         </View>
       )}
 
-      {/* ── TELEFONO ── */}
+      {/* TELEFONO */}
       {seccion === 'telefono' && (
         <View style={styles.card}>
           <TouchableOpacity onPress={() => setSeccion('inicio')} style={styles.backBtn}>
@@ -385,7 +360,12 @@ const styles = StyleSheet.create({
   errorText: { color: '#DC2626', fontSize: 13, textAlign: 'center' },
   exitoBox: { backgroundColor: '#ECFDF5', borderWidth: 1, borderColor: '#6EE7B7', borderRadius: 10, padding: 12, marginBottom: 14 },
   exitoText: { color: '#059669', fontSize: 13, textAlign: 'center' },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 18, borderWidth: 1.5, borderColor: '#E2E8F0', marginBottom: 14, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  card: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 18,
+    borderWidth: 1.5, borderColor: '#E2E8F0', marginBottom: 14,
+    shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06, shadowRadius: 12, elevation: 3,
+  },
   cardTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 14 },
   cardSub: { fontSize: 13, color: '#8892B0', marginBottom: 16, lineHeight: 20 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F0EFFF' },

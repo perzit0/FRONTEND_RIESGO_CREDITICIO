@@ -1,30 +1,29 @@
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert
+  StyleSheet, Alert, Platform
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import Svg, { Path, Circle, Line, Text as SvgText, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Path, Circle, Line, Text as SvgText } from 'react-native-svg';
 import { obtenerToken } from '../../storage/secureStorage';
+import { BASE_URL } from '../../data/api/client';
 
 function Velocimetro({ categoria }: { categoria: string }) {
-  const W = 280;
-  const H = 160;
+  const W = 300;
+  const H = 180;
   const cx = W / 2;
-  const cy = H - 20;
+  const cy = H - 24;
   const r = 110;
 
-  // Angulo: -180 (izquierda) a 0 (derecha), en radianes
-  // Bajo = derecha (0°), Medio = centro (-90°), Alto = izquierda (-180°)
   function getAngulo() {
-    if (categoria === 'bajo') return -20;   // casi derecha = verde
-    if (categoria === 'medio') return -90;  // centro = amarillo
-    return -160;                             // casi izquierda = rojo
+    if (categoria === 'bajo') return -20;
+    if (categoria === 'medio') return -90;
+    return -160;
   }
 
   const angulo = getAngulo();
   const rad = (angulo * Math.PI) / 180;
-  const agujaX = cx + (r - 20) * Math.cos(rad);
-  const agujaY = cy + (r - 20) * Math.sin(rad);
+  const agujaX = cx + (r - 22) * Math.cos(rad);
+  const agujaY = cy + (r - 22) * Math.sin(rad);
 
   function getColor() {
     if (categoria === 'bajo') return '#059669';
@@ -32,7 +31,6 @@ function Velocimetro({ categoria }: { categoria: string }) {
     return '#DC2626';
   }
 
-  // Arc path helper
   function arcPath(startDeg: number, endDeg: number) {
     const s = (startDeg * Math.PI) / 180;
     const e = (endDeg * Math.PI) / 180;
@@ -43,57 +41,70 @@ function Velocimetro({ categoria }: { categoria: string }) {
     return `M ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2}`;
   }
 
+  // Posiciones de las marcas numéricas en el arco
+  // El arco va de -180° (izquierda=alto) a 0° (derecha=bajo)
+  // Marcas: 0, 25, 50, 75, 100 distribuidas en el arco
+  function marcaPos(pct: number) {
+    const deg = -180 + pct * 1.8; // 0% → -180°, 100% → 0°
+    const rad2 = (deg * Math.PI) / 180;
+    const rMarca = r + 16;
+    return {
+      x: cx + rMarca * Math.cos(rad2),
+      y: cy + rMarca * Math.sin(rad2),
+    };
+  }
+
   return (
     <Svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
       {/* Track fondo */}
-      <Path
-        d={arcPath(-180, 0)}
-        fill="none"
-        stroke="#E2E8F0"
-        strokeWidth={18}
-        strokeLinecap="round"
-      />
-      {/* Zona roja */}
-      <Path
-        d={arcPath(-180, -120)}
-        fill="none"
-        stroke="#EF4444"
-        strokeWidth={18}
-        strokeLinecap="round"
-      />
-      {/* Zona amarilla */}
-      <Path
-        d={arcPath(-120, -60)}
-        fill="none"
-        stroke="#F59E0B"
-        strokeWidth={18}
-        strokeLinecap="round"
-      />
-      {/* Zona verde */}
-      <Path
-        d={arcPath(-60, 0)}
-        fill="none"
-        stroke="#10B981"
-        strokeWidth={18}
-        strokeLinecap="round"
-      />
+      <Path d={arcPath(-180, 0)} fill="none" stroke="#E2E8F0" strokeWidth={18} strokeLinecap="round" />
+      {/* Zona roja: alto */}
+      <Path d={arcPath(-180, -120)} fill="none" stroke="#EF4444" strokeWidth={18} strokeLinecap="round" />
+      {/* Zona amarilla: medio */}
+      <Path d={arcPath(-120, -60)} fill="none" stroke="#F59E0B" strokeWidth={18} strokeLinecap="round" />
+      {/* Zona verde: bajo */}
+      <Path d={arcPath(-60, 0)} fill="none" stroke="#10B981" strokeWidth={18} strokeLinecap="round" />
+
+      {/* Marcas numéricas en el arco — CORREGIDO: fuera del arco para no superponerse */}
+      {[
+        { pct: 0, label: '0' },
+        { pct: 33, label: '33' },
+        { pct: 66, label: '66' },
+        { pct: 100, label: '100' },
+      ].map(({ pct, label }) => {
+        const pos = marcaPos(pct);
+        return (
+          <SvgText
+            key={label}
+            x={pos.x}
+            y={pos.y}
+            fill="#8892B0"
+            fontSize={9}
+            fontWeight="600"
+            textAnchor="middle"
+            alignmentBaseline="central"
+          >
+            {label}
+          </SvgText>
+        );
+      })}
+
+      {/* Labels de zona — debajo del arco para no superponerse con la aguja */}
+      <SvgText x={24} y={H - 6} fill="#EF4444" fontSize={10} fontWeight="700" textAnchor="middle">Alto</SvgText>
+      <SvgText x={cx} y={36} fill="#F59E0B" fontSize={10} fontWeight="700" textAnchor="middle">Medio</SvgText>
+      <SvgText x={W - 24} y={H - 6} fill="#10B981" fontSize={10} fontWeight="700" textAnchor="middle">Bajo</SvgText>
+
       {/* Aguja */}
       <Line
-        x1={cx}
-        y1={cy}
-        x2={agujaX}
-        y2={agujaY}
+        x1={cx} y1={cy}
+        x2={agujaX} y2={agujaY}
         stroke={getColor()}
         strokeWidth={3}
         strokeLinecap="round"
       />
-      {/* Centro */}
-      <Circle cx={cx} cy={cy} r={8} fill={getColor()} />
-      <Circle cx={cx} cy={cy} r={3} fill="#fff" />
-      {/* Labels */}
-      <SvgText x={18} y={H - 8} fill="#EF4444" fontSize={11} fontWeight="600">Alto</SvgText>
-      <SvgText x={cx - 18} y={22} fill="#F59E0B" fontSize={11} fontWeight="600">Medio</SvgText>
-      <SvgText x={W - 46} y={H - 8} fill="#10B981" fontSize={11} fontWeight="600">Bajo</SvgText>
+      {/* Centro de la aguja */}
+      <Circle cx={cx} cy={cy} r={9} fill={getColor()} />
+      <Circle cx={cx} cy={cy} r={4} fill="#fff" />
     </Svg>
   );
 }
@@ -143,21 +154,33 @@ export default function ResultadoScreen() {
     try {
       const token = await obtenerToken();
       const evaluacionId = resultado.evaluacion_id;
-      const url = `https://backend-riesgo-crediticio.onrender.com/api/user/evaluacion/${evaluacionId}/pdf`;
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!response.ok) {
-        Alert.alert('Error', 'No se pudo generar el PDF');
-        return;
+
+      // CORRECCIÓN: usa BASE_URL del apiClient, no URL hardcodeada a Render
+      const url = `${BASE_URL}/api/user/evaluacion/${evaluacionId}/pdf`;
+
+      if (Platform.OS === 'web') {
+        // En web: fetch + descarga por blob
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) {
+          Alert.alert('Error', 'No se pudo generar el PDF');
+          return;
+        }
+        const blob = await response.blob();
+        const urlBlob = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = urlBlob;
+        link.download = `Reporte_Crediticio_${evaluacionId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(urlBlob);
+      } else {
+        // En móvil: abrir en navegador
+        const { Linking } = await import('react-native');
+        await Linking.openURL(url);
       }
-      const blob = await response.blob();
-      const urlBlob = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = urlBlob;
-      link.download = `Reporte_Crediticio_${evaluacionId}.pdf`;
-      link.click();
-      URL.revokeObjectURL(urlBlob);
     } catch {
       Alert.alert('Error', 'No se pudo descargar el reporte');
     }
@@ -166,7 +189,6 @@ export default function ResultadoScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
 
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>UNFV — Riesgo Crediticio</Text>
         <View style={[styles.badge, { backgroundColor: getCategoriaBg(), borderColor: getCategoriaColor() + '40' }]}>
@@ -174,7 +196,7 @@ export default function ResultadoScreen() {
         </View>
       </View>
 
-      {/* Velocímetro */}
+      {/* Velocímetro — CORREGIDO: números en el arco, labels sin superposición */}
       <View style={styles.card}>
         <View style={styles.velocimetroWrap}>
           <Velocimetro categoria={categoria} />
@@ -220,7 +242,6 @@ export default function ResultadoScreen() {
         ))}
       </View>
 
-      {/* Botones */}
       <TouchableOpacity style={styles.btnPrimary} onPress={handleDescargarPDF}>
         <Text style={styles.btnPrimaryText}>Descargar reporte PDF</Text>
       </TouchableOpacity>
@@ -247,26 +268,19 @@ const styles = StyleSheet.create({
     width: '100%', maxWidth: 480,
   },
   headerTitle: { fontSize: 15, fontWeight: '700', color: '#6B4EFF' },
-  badge: {
-    paddingHorizontal: 12, paddingVertical: 4,
-    borderRadius: 20, borderWidth: 1,
-  },
+  badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
   badgeText: { fontSize: 11, fontWeight: '600' },
   card: {
     width: '100%', maxWidth: 480,
     backgroundColor: '#FFFFFF', borderRadius: 20, padding: 20,
     shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08, shadowRadius: 16, elevation: 4,
-    marginBottom: 14,
+    shadowOpacity: 0.08, shadowRadius: 16, elevation: 4, marginBottom: 14,
   },
   cardTitle: { fontSize: 14, fontWeight: '700', color: '#1A1A2E', marginBottom: 14 },
   velocimetroWrap: { alignItems: 'center', paddingVertical: 8 },
   resultLabel: { fontSize: 22, fontWeight: '700', marginTop: 8, marginBottom: 6 },
   resultDesc: { fontSize: 13, color: '#8892B0', textAlign: 'center' },
-  factorRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: 10, marginBottom: 10,
-  },
+  factorRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
   factorDot: { width: 8, height: 8, borderRadius: 4, flexShrink: 0 },
   factorText: { fontSize: 13, color: '#4A5568', flex: 1 },
   factorBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },

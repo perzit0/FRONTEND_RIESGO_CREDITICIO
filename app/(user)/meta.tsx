@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import apiClient from '../../data/api/client';
-import { obtenerToken } from '../../storage/secureStorage';
 
 export default function MetaScreen() {
   const router = useRouter();
@@ -16,10 +15,7 @@ export default function MetaScreen() {
 
   async function cargarHistorial() {
     try {
-      const token = await obtenerToken();
-      const res = await apiClient.get('/api/user/mi-historial', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiClient.get('/api/user/mi-historial');
       setHistorial(res.data);
     } catch { }
     finally { setLoading(false); }
@@ -87,7 +83,6 @@ export default function MetaScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
 
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backText}>← Volver</Text>
@@ -96,26 +91,18 @@ export default function MetaScreen() {
         <Text style={styles.sub}>Pasos concretos para mejorar tu perfil crediticio</Text>
       </View>
 
-      {/* Sin evaluaciones */}
       {!ultimaEval && (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Aún no tienes evaluaciones</Text>
-          <Text style={styles.cardSub}>
-            Realiza tu primera evaluación crediticia para recibir un plan personalizado.
-          </Text>
-          <TouchableOpacity
-            style={styles.btnPrimary}
-            onPress={() => router.push('/(user)/formulario')}
-          >
+          <Text style={styles.cardSub}>Realiza tu primera evaluación crediticia para recibir un plan personalizado.</Text>
+          <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(user)/formulario')}>
             <Text style={styles.btnPrimaryText}>Evaluar ahora</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Con evaluacion */}
       {ultimaEval && (
         <>
-          {/* Estado actual */}
           <View style={[styles.card, { borderLeftWidth: 4, borderLeftColor: getColor(categoria) }]}>
             <Text style={styles.cardLabel}>Tu nivel actual</Text>
             <View style={[styles.estadoBadge, { backgroundColor: getBg(categoria) }]}>
@@ -128,17 +115,17 @@ export default function MetaScreen() {
             </Text>
           </View>
 
-          {/* Meta */}
           <View style={styles.metaCard}>
             <Text style={styles.metaIcon}>🎯</Text>
             <Text style={styles.metaTitulo}>{getTituloMeta()}</Text>
           </View>
 
-          {/* Pasos */}
           <Text style={styles.pasosTitle}>Plan de acción</Text>
           {getPasos().map((paso, i) => (
             <View key={i} style={styles.pasoCard}>
-              <View style={[styles.pasoNum, { backgroundColor: categoria === 'bajo' ? '#EDE9FF' : categoria === 'medio' ? '#FFFBEB' : '#FEF2F2' }]}>
+              <View style={[styles.pasoNum, {
+                backgroundColor: categoria === 'bajo' ? '#EDE9FF' : categoria === 'medio' ? '#FFFBEB' : '#FEF2F2'
+              }]}>
                 <Text style={[styles.pasoNumText, { color: getColor(categoria) }]}>{i + 1}</Text>
               </View>
               <View style={{ flex: 1 }}>
@@ -148,11 +135,7 @@ export default function MetaScreen() {
             </View>
           ))}
 
-          {/* CTA nueva evaluacion */}
-          <TouchableOpacity
-            style={styles.btnPrimary}
-            onPress={() => router.push('/(user)/formulario')}
-          >
+          <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(user)/formulario')}>
             <Text style={styles.btnPrimaryText}>Realizar nueva evaluación</Text>
           </TouchableOpacity>
         </>
@@ -166,10 +149,7 @@ export default function MetaScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F0EFFF' },
   scroll: { padding: 20 },
-  loadingWrap: {
-    flex: 1, backgroundColor: '#F0EFFF',
-    alignItems: 'center', justifyContent: 'center',
-  },
+  loadingWrap: { flex: 1, backgroundColor: '#F0EFFF', alignItems: 'center', justifyContent: 'center' },
   header: { marginBottom: 20 },
   backBtn: { marginBottom: 12 },
   backText: { color: '#6B4EFF', fontSize: 14, fontWeight: '500' },
@@ -184,10 +164,7 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 8 },
   cardLabel: { fontSize: 12, color: '#8892B0', fontWeight: '500', marginBottom: 8 },
   cardSub: { fontSize: 13, color: '#8892B0', marginTop: 6, lineHeight: 20 },
-  estadoBadge: {
-    paddingHorizontal: 14, paddingVertical: 6,
-    borderRadius: 20, alignSelf: 'flex-start', marginBottom: 8,
-  },
+  estadoBadge: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start', marginBottom: 8 },
   estadoText: { fontSize: 14, fontWeight: '700' },
   metaCard: {
     backgroundColor: '#EDE9FF', borderRadius: 16, padding: 20,
@@ -204,16 +181,10 @@ const styles = StyleSheet.create({
     shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
   },
-  pasoNum: {
-    width: 32, height: 32, borderRadius: 16,
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  },
+  pasoNum: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   pasoNumText: { fontSize: 14, fontWeight: '700' },
   pasoTitulo: { fontSize: 14, fontWeight: '700', color: '#1A1A2E', marginBottom: 4 },
   pasoDesc: { fontSize: 12, color: '#8892B0', lineHeight: 18 },
-  btnPrimary: {
-    backgroundColor: '#6B4EFF', borderRadius: 12,
-    padding: 15, alignItems: 'center', marginTop: 8,
-  },
+  btnPrimary: { backgroundColor: '#6B4EFF', borderRadius: 12, padding: 15, alignItems: 'center', marginTop: 8 },
   btnPrimaryText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });

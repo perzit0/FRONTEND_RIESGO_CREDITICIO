@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import apiClient from '../../data/api/client';
-import { obtenerToken, obtenerRol, cerrarSesion } from '../../storage/secureStorage';
+import { cerrarSesion } from '../../storage/secureStorage';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -14,17 +14,14 @@ export default function HomeScreen() {
   const [historial, setHistorial] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    cargarDatos();
-  }, []);
+  useEffect(() => { cargarDatos(); }, []);
 
   async function cargarDatos() {
     try {
-      const token = await obtenerToken();
-      const headers = { Authorization: `Bearer ${token}` };
+      // El interceptor de client.ts agrega el token automáticamente
       const [perfilRes, historialRes] = await Promise.all([
-        apiClient.get('/api/user/mi-perfil', { headers }),
-        apiClient.get('/api/user/mi-historial', { headers }),
+        apiClient.get('/api/user/mi-perfil'),
+        apiClient.get('/api/user/mi-historial'),
       ]);
       setPerfil(perfilRes.data);
       setHistorial(historialRes.data);
@@ -65,7 +62,6 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
 
-      {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.headerSub}>UNFV — Riesgo Crediticio</Text>
@@ -78,7 +74,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Ultima evaluacion */}
+      {/* Última evaluación */}
       {ultimaEval ? (
         <View style={[styles.card, { borderLeftWidth: 4, borderLeftColor: getColorCategoria(ultimaEval.categoria_riesgo) }]}>
           <Text style={styles.cardLabel}>Tu último resultado</Text>
@@ -135,11 +131,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Boton que es el riesgo crediticio */}
-      <TouchableOpacity
-        style={styles.infoBtn}
-        onPress={() => setModalVisible(true)}
-      >
+      <TouchableOpacity style={styles.infoBtn} onPress={() => setModalVisible(true)}>
         <Text style={styles.infoBtnText}>¿Qué es el riesgo crediticio?</Text>
       </TouchableOpacity>
 
@@ -169,12 +161,7 @@ export default function HomeScreen() {
       )}
 
       {/* Modal ¿Qué es el riesgo crediticio? */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
+      <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>¿Qué es el riesgo crediticio?</Text>
@@ -186,27 +173,19 @@ export default function HomeScreen() {
                 En términos simples: es una medida de qué tan "confiable" eres financieramente ante una entidad bancaria o prestamista.
               </Text>
               <Text style={styles.modalSubtitle}>¿Cómo se clasifica?</Text>
-              <View style={styles.modalRiesgoRow}>
-                <View style={[styles.modalRiesgoDot, { backgroundColor: '#059669' }]} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.modalRiesgoLabel}>Riesgo Bajo</Text>
-                  <Text style={styles.modalRiesgoDesc}>Buena salud financiera. Pagas a tiempo y tienes ingresos estables.</Text>
+              {[
+                { color: '#059669', label: 'Riesgo Bajo', desc: 'Buena salud financiera. Pagas a tiempo y tienes ingresos estables.' },
+                { color: '#D97706', label: 'Riesgo Medio', desc: 'Hay aspectos a mejorar. Puedes acceder a créditos, pero con más restricciones.' },
+                { color: '#DC2626', label: 'Riesgo Alto', desc: 'Situación financiera delicada. Se recomienda tomar medidas para mejorar tu perfil.' },
+              ].map(({ color, label, desc }) => (
+                <View key={label} style={styles.modalRiesgoRow}>
+                  <View style={[styles.modalRiesgoDot, { backgroundColor: color }]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.modalRiesgoLabel}>{label}</Text>
+                    <Text style={styles.modalRiesgoDesc}>{desc}</Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.modalRiesgoRow}>
-                <View style={[styles.modalRiesgoDot, { backgroundColor: '#D97706' }]} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.modalRiesgoLabel}>Riesgo Medio</Text>
-                  <Text style={styles.modalRiesgoDesc}>Hay aspectos a mejorar. Puedes acceder a créditos, pero con más restricciones.</Text>
-                </View>
-              </View>
-              <View style={styles.modalRiesgoRow}>
-                <View style={[styles.modalRiesgoDot, { backgroundColor: '#DC2626' }]} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.modalRiesgoLabel}>Riesgo Alto</Text>
-                  <Text style={styles.modalRiesgoDesc}>Situación financiera delicada. Se recomienda tomar medidas para mejorar tu perfil.</Text>
-                </View>
-              </View>
+              ))}
               <Text style={styles.modalSubtitle}>¿Para qué sirve conocerlo?</Text>
               <Text style={styles.modalText}>
                 Conocer tu riesgo crediticio te permite tomar mejores decisiones financieras, prepararte para solicitar un crédito, y trabajar en mejorar tu historial antes de necesitarlo.
@@ -227,21 +206,11 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F0EFFF' },
   scroll: { padding: 20 },
-  loadingWrap: {
-    flex: 1, backgroundColor: '#F0EFFF',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'flex-start', marginBottom: 20,
-  },
+  loadingWrap: { flex: 1, backgroundColor: '#F0EFFF', alignItems: 'center', justifyContent: 'center' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   headerSub: { fontSize: 12, color: '#6B4EFF', fontWeight: '600', marginBottom: 2 },
   headerTitle: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
-  logoutBtn: {
-    paddingHorizontal: 14, paddingVertical: 7,
-    borderRadius: 10, borderWidth: 1.5, borderColor: '#E2E8F0',
-    backgroundColor: '#fff',
-  },
+  logoutBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10, borderWidth: 1.5, borderColor: '#E2E8F0', backgroundColor: '#fff' },
   logoutText: { color: '#8892B0', fontSize: 13, fontWeight: '500' },
   card: {
     backgroundColor: '#fff', borderRadius: 16, padding: 18,
@@ -256,9 +225,7 @@ const styles = StyleSheet.create({
   resultBadge: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20 },
   resultBadgeText: { fontSize: 14, fontWeight: '700' },
   resultFecha: { fontSize: 12, color: '#A0AEC0' },
-  accionesGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 14,
-  },
+  accionesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 14 },
   accionBtn: {
     width: '47%', borderRadius: 16, padding: 18,
     alignItems: 'center', justifyContent: 'center',
@@ -273,24 +240,14 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: '#6B4EFF',
   },
   infoBtnText: { color: '#6B4EFF', fontSize: 14, fontWeight: '600' },
-  historialRow: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: 12, paddingVertical: 10,
-    borderBottomWidth: 1, borderBottomColor: '#F0EFFF',
-  },
+  historialRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F0EFFF' },
   historialDot: { width: 10, height: 10, borderRadius: 5 },
   historialCategoria: { fontSize: 13, fontWeight: '600', color: '#1A1A2E' },
   historialFecha: { fontSize: 11, color: '#A0AEC0', marginTop: 2 },
   historialBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   historialBadgeText: { fontSize: 11, fontWeight: '700' },
-  modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalCard: {
-    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 28, maxHeight: '80%',
-  },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalCard: { backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 28, maxHeight: '80%' },
   modalTitle: { fontSize: 20, fontWeight: '700', color: '#1A1A2E', marginBottom: 16 },
   modalText: { fontSize: 14, color: '#4A5568', lineHeight: 22, marginBottom: 12 },
   modalSubtitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 10, marginTop: 4 },
@@ -299,9 +256,6 @@ const styles = StyleSheet.create({
   modalRiesgoLabel: { fontSize: 13, fontWeight: '700', color: '#1A1A2E', marginBottom: 2 },
   modalRiesgoDesc: { fontSize: 12, color: '#8892B0', lineHeight: 18 },
   bold: { fontWeight: '700', color: '#1A1A2E' },
-  modalBtn: {
-    backgroundColor: '#6B4EFF', borderRadius: 12,
-    padding: 14, alignItems: 'center', marginTop: 20,
-  },
+  modalBtn: { backgroundColor: '#6B4EFF', borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 20 },
   modalBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });
