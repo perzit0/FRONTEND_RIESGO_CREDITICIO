@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Alert,
-  KeyboardAvoidingView, Platform, ScrollView
+  StyleSheet, ActivityIndicator, KeyboardAvoidingView,
+  Platform, ScrollView, Image
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import apiClient from '../../data/api/client';
@@ -46,21 +46,19 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        keyboardShouldPersistTaps="handled"
-      >
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
-          {/* Logo */}
+
+          {/* Logo UNFV */}
           <View style={styles.logoWrap}>
-            <View style={styles.logoIcon}>
-              <Text style={styles.logoInitial}>C</Text>
-            </View>
-            <Text style={styles.logoText}>UNFV — Riesgo Crediticio</Text>
+            <Image
+              source={require('../../assets/unfv_logo.jpg')}
+              style={styles.logoImg}
+              resizeMode="contain"
+            />
             <Text style={styles.logoSub}>Sistema de Riesgo Crediticio</Text>
           </View>
 
-          {/* Error */}
           {error ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>{error}</Text>
@@ -88,10 +86,7 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
             />
-            <TouchableOpacity
-              onPress={() => setVerPassword(!verPassword)}
-              style={styles.eyeBtn}
-            >
+            <TouchableOpacity onPress={() => setVerPassword(!verPassword)} style={styles.eyeBtn}>
               <Text style={styles.eyeText}>{verPassword ? '🙈' : '👁'}</Text>
             </TouchableOpacity>
           </View>
@@ -103,15 +98,8 @@ export default function LoginScreen() {
             <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.btnPrimary}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            {loading
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.btnPrimaryText}>Ingresar</Text>
-            }
+          <TouchableOpacity style={styles.btnPrimary} onPress={handleLogin} disabled={loading}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnPrimaryText}>Ingresar</Text>}
           </TouchableOpacity>
 
           <View style={styles.dividerWrap}>
@@ -120,10 +108,7 @@ export default function LoginScreen() {
             <View style={styles.dividerLine} />
           </View>
 
-          <TouchableOpacity
-            style={styles.btnSecondary}
-            onPress={() => router.push('/(auth)/registro')}
-          >
+          <TouchableOpacity style={styles.btnSecondary} onPress={() => router.push('/(auth)/registro')}>
             <Text style={styles.btnSecondaryText}>Crear una cuenta nueva</Text>
           </TouchableOpacity>
         </View>
@@ -134,45 +119,29 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F0EFFF' },
-  scroll: {
-    flexGrow: 1, justifyContent: 'center',
-    alignItems: 'center', padding: 24,
-  },
+  scroll: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   card: {
     width: '100%', maxWidth: 400,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24, padding: 32,
-    shadowColor: '#6B4EFF',
-    shadowOffset: { width: 0, height: 8 },
+    backgroundColor: '#FFFFFF', borderRadius: 24, padding: 32,
+    shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1, shadowRadius: 24, elevation: 8,
   },
   logoWrap: { alignItems: 'center', marginBottom: 28 },
-  logoIcon: {
-    width: 56, height: 56,
-    backgroundColor: '#6B4EFF',
-    borderRadius: 16, alignItems: 'center',
-    justifyContent: 'center', marginBottom: 12,
-  },
-  logoInitial: { fontSize: 26, fontWeight: '700', color: '#FFFFFF' },
-  logoText: { fontSize: 17, fontWeight: '700', color: '#1A1A2E' },
-  logoSub: { fontSize: 12, color: '#8892B0', marginTop: 2 },
+  logoImg: { width: 220, height: 80 },
+  logoSub: { fontSize: 12, color: '#8892B0', marginTop: 8 },
   errorBox: {
-    backgroundColor: '#FEF2F2',
-    borderWidth: 1, borderColor: '#FECACA',
+    backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA',
     borderRadius: 10, padding: 12, marginBottom: 16,
   },
   errorText: { color: '#DC2626', fontSize: 13, textAlign: 'center' },
   label: { fontSize: 13, fontWeight: '600', color: '#2D3748', marginBottom: 6 },
   input: {
-    backgroundColor: '#F7F8FC',
-    borderWidth: 1.5, borderColor: '#E2E8F0',
-    borderRadius: 12, padding: 13,
-    fontSize: 14, color: '#1A1A2E', marginBottom: 16,
+    backgroundColor: '#F7F8FC', borderWidth: 1.5, borderColor: '#E2E8F0',
+    borderRadius: 12, padding: 13, fontSize: 14, color: '#1A1A2E', marginBottom: 16,
   },
   passwordWrap: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F7F8FC',
-    borderWidth: 1.5, borderColor: '#E2E8F0',
+    backgroundColor: '#F7F8FC', borderWidth: 1.5, borderColor: '#E2E8F0',
     borderRadius: 12, marginBottom: 8,
   },
   passwordInput: { flex: 1, padding: 13, fontSize: 14, color: '#1A1A2E' },
@@ -181,14 +150,11 @@ const styles = StyleSheet.create({
   forgotWrap: { alignItems: 'flex-end', marginBottom: 20, marginTop: 4 },
   forgotText: { fontSize: 12, color: '#6B4EFF', fontWeight: '500' },
   btnPrimary: {
-    backgroundColor: '#6B4EFF',
-    borderRadius: 12, padding: 14, alignItems: 'center',
+    backgroundColor: '#6B4EFF', borderRadius: 12,
+    padding: 14, alignItems: 'center',
   },
   btnPrimaryText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  dividerWrap: {
-    flexDirection: 'row', alignItems: 'center',
-    marginVertical: 20, gap: 10,
-  },
+  dividerWrap: { flexDirection: 'row', alignItems: 'center', marginVertical: 20, gap: 10 },
   dividerLine: { flex: 1, height: 1, backgroundColor: '#E2E8F0' },
   dividerText: { fontSize: 12, color: '#A0AEC0' },
   btnSecondary: {
