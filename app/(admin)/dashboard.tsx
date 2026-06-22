@@ -38,7 +38,7 @@ export default function DashboardScreen() {
     setExportando(true);
     try {
       const token = await obtenerToken();
-      const url = 'http://127.0.0.1:5000/api/admin/exportar-excel';
+      const url = 'https://backend-riesgo-crediticio.onrender.com/api/admin/exportar-excel';
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });

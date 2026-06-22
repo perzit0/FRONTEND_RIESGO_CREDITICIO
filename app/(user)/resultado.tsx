@@ -143,7 +143,7 @@ export default function ResultadoScreen() {
     try {
       const token = await obtenerToken();
       const evaluacionId = resultado.evaluacion_id;
-      const url = `http://127.0.0.1:5000/api/user/evaluacion/${evaluacionId}/pdf`;
+      const url = `https://backend-riesgo-crediticio.onrender.com/api/user/evaluacion/${evaluacionId}/pdf`;
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
