@@ -5,9 +5,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import apiClient from '../../data/api/client';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function MetricasScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [metricas, setMetricas] = useState<any>(null);
 
@@ -26,9 +28,9 @@ export default function MetricasScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingWrap}>
-        <ActivityIndicator color="#6B4EFF" size="large" />
-        <Text style={styles.loadingText}>Cargando métricas...</Text>
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+        <ActivityIndicator color={colors.primary} size="large" />
+        <Text style={{ color: colors.textSecondary, fontSize: 14 }}>Cargando métricas...</Text>
       </View>
     );
   }
@@ -38,134 +40,100 @@ export default function MetricasScreen() {
 
   function MetricaFila({ label, value }: { label: string, value: string }) {
     return (
-      <View style={styles.filaRow}>
-        <Text style={styles.filaLabel}>{label}</Text>
-        <Text style={styles.filaValue}>{value}</Text>
+      <View style={[styles.filaRow, { borderBottomColor: colors.divider }]}>
+        <Text style={[styles.filaLabel, { color: colors.textSecondary }]}>{label}</Text>
+        <Text style={[styles.filaValue, { color: colors.textPrimary }]}>{value}</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
 
       <View style={styles.header}>
-        <Text style={styles.headerSub}>UNFV — Riesgo Crediticio</Text>
-        <Text style={styles.title}>Modelos en producción</Text>
-        <Text style={styles.sub}>Modelos de IA actualmente en uso</Text>
+        <Text style={[styles.headerSub, { color: colors.primary }]}>UNFV — Riesgo Crediticio</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Modelos en producción</Text>
+        <Text style={[styles.sub, { color: colors.textSecondary }]}>Modelos de IA actualmente en uso</Text>
       </View>
 
       <View style={styles.nav}>
-        <TouchableOpacity style={styles.navBtn} onPress={() => router.push('/(admin)/dashboard')}>
-          <Text style={styles.navText}>Dashboard</Text>
+        <TouchableOpacity style={[styles.navBtn, { borderColor: colors.cardBorder, backgroundColor: colors.card }]} onPress={() => router.push('/(admin)/dashboard')}>
+          <Text style={[styles.navText, { color: colors.textSecondary }]}>Dashboard</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navBtn} onPress={() => router.push('/(admin)/casos-fraude')}>
-          <Text style={styles.navText}>Cola de fraude</Text>
+        <TouchableOpacity style={[styles.navBtn, { borderColor: colors.cardBorder, backgroundColor: colors.card }]} onPress={() => router.push('/(admin)/casos-fraude')}>
+          <Text style={[styles.navText, { color: colors.textSecondary }]}>Cola de fraude</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.navBtn, styles.navActive]}>
+        <TouchableOpacity style={[styles.navBtn, styles.navActive, { backgroundColor: colors.primary, borderColor: colors.primary }]}>
           <Text style={[styles.navText, styles.navTextActive]}>Métricas</Text>
         </TouchableOpacity>
       </View>
 
       {/* Modelo de riesgo */}
-      <View style={[styles.card, { borderTopColor: '#6B4EFF' }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderTopColor: colors.primary }]}>
         <View style={styles.cardHeader}>
-          <View style={styles.iconWrap}>
+          <View style={[styles.iconWrap, { backgroundColor: colors.primaryLight }]}>
             <Text style={styles.iconText}>📊</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Modelo de riesgo crediticio</Text>
-            <Text style={styles.cardSub}>Algoritmo: {riesgo.algoritmo ?? 'XGBoost'}</Text>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Modelo de riesgo crediticio</Text>
+            <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Algoritmo: {riesgo.algoritmo ?? 'XGBoost'}</Text>
           </View>
-          <View style={styles.activeBadge}>
-            <Text style={styles.activeBadgeText}>● Activo</Text>
+          <View style={[styles.activeBadge, { backgroundColor: colors.successBg, borderColor: colors.successBorder }]}>
+            <Text style={[styles.activeBadgeText, { color: colors.success }]}>● Activo</Text>
           </View>
         </View>
 
         <View style={styles.metricasGrid}>
-          <View style={styles.metricaCard}>
-            <Text style={styles.metricaNum}>
-              {riesgo.accuracy != null ? `${Math.round(riesgo.accuracy * 100)}%` : '—'}
-            </Text>
-            <Text style={styles.metricaLabel}>Accuracy</Text>
-          </View>
-          <View style={styles.metricaCard}>
-            <Text style={styles.metricaNum}>
-              {riesgo.f1_score != null ? `${Math.round(riesgo.f1_score * 100)}%` : '—'}
-            </Text>
-            <Text style={styles.metricaLabel}>F1-Score</Text>
-          </View>
-          <View style={styles.metricaCard}>
-            <Text style={styles.metricaNum}>
-              {riesgo.roc_auc != null ? `${Math.round(riesgo.roc_auc * 100)}%` : '—'}
-            </Text>
-            <Text style={styles.metricaLabel}>ROC-AUC</Text>
-          </View>
+          {[
+            { num: riesgo.accuracy != null ? `${Math.round(riesgo.accuracy * 100)}%` : '—', label: 'Accuracy' },
+            { num: riesgo.f1_score != null ? `${Math.round(riesgo.f1_score * 100)}%` : '—', label: 'F1-Score' },
+            { num: riesgo.roc_auc != null ? `${Math.round(riesgo.roc_auc * 100)}%` : '—', label: 'ROC-AUC' },
+          ].map(({ num, label }) => (
+            <View key={label} style={[styles.metricaCard, { backgroundColor: colors.input, borderColor: colors.cardBorder }]}>
+              <Text style={[styles.metricaNum, { color: colors.textPrimary }]}>{num}</Text>
+              <Text style={[styles.metricaLabel, { color: colors.textSecondary }]}>{label}</Text>
+            </View>
+          ))}
         </View>
 
-        <View style={styles.divider} />
-        <MetricaFila
-          label="Tiempo de entrenamiento"
-          value={riesgo.tiempo_entrenamiento_seg != null ? `${riesgo.tiempo_entrenamiento_seg}s` : '—'}
-        />
-        <MetricaFila
-          label="Peso del modelo"
-          value={riesgo.peso_kb != null ? `${riesgo.peso_kb} KB` : '—'}
-        />
-        <MetricaFila
-          label="Dataset"
-          value="laotse/credit-risk-dataset (Kaggle)"
-        />
+        <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+        <MetricaFila label="Tiempo de entrenamiento" value={riesgo.tiempo_entrenamiento_seg != null ? `${riesgo.tiempo_entrenamiento_seg}s` : '—'} />
+        <MetricaFila label="Peso del modelo" value={riesgo.peso_kb != null ? `${riesgo.peso_kb} KB` : '—'} />
+        <MetricaFila label="Dataset" value="laotse/credit-risk-dataset (Kaggle)" />
       </View>
 
       {/* Modelo de fraude */}
-      <View style={[styles.card, { borderTopColor: '#DC2626' }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderTopColor: colors.danger }]}>
         <View style={styles.cardHeader}>
-          <View style={[styles.iconWrap, { backgroundColor: '#FEF2F2' }]}>
+          <View style={[styles.iconWrap, { backgroundColor: colors.dangerBg }]}>
             <Text style={styles.iconText}>🛡️</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.cardTitle}>Modelo de detección de fraude</Text>
-            <Text style={styles.cardSub}>Algoritmo: {fraude.algoritmo ?? 'Random Forest Supervisado'}</Text>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Modelo de detección de fraude</Text>
+            <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Algoritmo: {fraude.algoritmo ?? 'Random Forest Supervisado'}</Text>
           </View>
-          <View style={[styles.activeBadge, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}>
-            <Text style={[styles.activeBadgeText, { color: '#DC2626' }]}>● Activo</Text>
+          <View style={[styles.activeBadge, { backgroundColor: colors.dangerBg, borderColor: colors.dangerBorder }]}>
+            <Text style={[styles.activeBadgeText, { color: colors.danger }]}>● Activo</Text>
           </View>
         </View>
 
         <View style={styles.metricasGrid}>
-          <View style={styles.metricaCard}>
-            <Text style={styles.metricaNum}>
-              {fraude.tasa_deteccion != null ? `${Math.round(fraude.tasa_deteccion * 100)}%` : '—'}
-            </Text>
-            <Text style={styles.metricaLabel}>Detección</Text>
-          </View>
-          <View style={styles.metricaCard}>
-            <Text style={styles.metricaNum}>
-              {fraude.falsos_positivos != null ? `${Math.round(fraude.falsos_positivos * 100)}%` : '—'}
-            </Text>
-            <Text style={styles.metricaLabel}>Falsos +</Text>
-          </View>
-          <View style={styles.metricaCard}>
-            <Text style={styles.metricaNum}>
-              {fraude.tiempo_entrenamiento_seg != null ? `${fraude.tiempo_entrenamiento_seg}s` : '—'}
-            </Text>
-            <Text style={styles.metricaLabel}>Entrena.</Text>
-          </View>
+          {[
+            { num: fraude.tasa_deteccion != null ? `${Math.round(fraude.tasa_deteccion * 100)}%` : '—', label: 'Detección' },
+            { num: fraude.falsos_positivos != null ? `${Math.round(fraude.falsos_positivos * 100)}%` : '—', label: 'Falsos +' },
+            { num: fraude.tiempo_entrenamiento_seg != null ? `${fraude.tiempo_entrenamiento_seg}s` : '—', label: 'Entrena.' },
+          ].map(({ num, label }) => (
+            <View key={label} style={[styles.metricaCard, { backgroundColor: colors.input, borderColor: colors.cardBorder }]}>
+              <Text style={[styles.metricaNum, { color: colors.textPrimary }]}>{num}</Text>
+              <Text style={[styles.metricaLabel, { color: colors.textSecondary }]}>{label}</Text>
+            </View>
+          ))}
         </View>
 
-        <View style={styles.divider} />
-        <MetricaFila
-          label="Tiempo de entrenamiento"
-          value={fraude.tiempo_entrenamiento_seg != null ? `${fraude.tiempo_entrenamiento_seg}s` : '—'}
-        />
-        <MetricaFila
-          label="Peso del modelo"
-          value={fraude.peso_kb != null ? `${fraude.peso_kb} KB` : '—'}
-        />
-        <MetricaFila
-          label="Dataset"
-          value="Sintético generado"
-        />
+        <View style={[styles.divider, { backgroundColor: colors.divider }]} />
+        <MetricaFila label="Tiempo de entrenamiento" value={fraude.tiempo_entrenamiento_seg != null ? `${fraude.tiempo_entrenamiento_seg}s` : '—'} />
+        <MetricaFila label="Peso del modelo" value={fraude.peso_kb != null ? `${fraude.peso_kb} KB` : '—'} />
+        <MetricaFila label="Dataset" value="Sintético generado" />
       </View>
 
       <View style={{ height: 32 }} />
@@ -174,46 +142,30 @@ export default function MetricasScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0EFFF' },
   scroll: { padding: 24 },
-  loadingWrap: { flex: 1, backgroundColor: '#F0EFFF', alignItems: 'center', justifyContent: 'center', gap: 16 },
-  loadingText: { color: '#8892B0', fontSize: 14 },
   header: { marginBottom: 20 },
-  headerSub: { fontSize: 12, color: '#6B4EFF', fontWeight: '600', marginBottom: 2 },
-  title: { fontSize: 22, fontWeight: '700', color: '#1A1A2E' },
-  sub: { fontSize: 13, color: '#8892B0', marginTop: 2 },
+  headerSub: { fontSize: 12, fontWeight: '600', marginBottom: 2 },
+  title: { fontSize: 22, fontWeight: '700' },
+  sub: { fontSize: 13, marginTop: 2 },
   nav: { flexDirection: 'row', gap: 8, marginBottom: 20, flexWrap: 'wrap' },
-  navBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5, borderColor: '#E2E8F0', backgroundColor: '#fff' },
-  navActive: { backgroundColor: '#6B4EFF', borderColor: '#6B4EFF' },
-  navText: { color: '#8892B0', fontSize: 13, fontWeight: '500' },
+  navBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5 },
+  navActive: {},
+  navText: { fontSize: 13, fontWeight: '500' },
   navTextActive: { color: '#fff', fontWeight: '600' },
-  card: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 20,
-    borderWidth: 1.5, borderColor: '#E2E8F0', marginBottom: 16,
-    borderTopWidth: 3,
-    shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06, shadowRadius: 12, elevation: 3,
-  },
+  card: { borderRadius: 16, padding: 20, borderWidth: 1.5, borderTopWidth: 3, marginBottom: 16, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
-  iconWrap: { width: 44, height: 44, backgroundColor: '#EDE9FF', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  iconWrap: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   iconText: { fontSize: 22 },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E' },
-  cardSub: { fontSize: 12, color: '#8892B0', marginTop: 2 },
-  activeBadge: {
-    backgroundColor: '#ECFDF5', borderWidth: 1.5, borderColor: '#6EE7B7',
-    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4,
-  },
-  activeBadgeText: { fontSize: 11, fontWeight: '700', color: '#059669' },
+  cardTitle: { fontSize: 15, fontWeight: '700' },
+  cardSub: { fontSize: 12, marginTop: 2 },
+  activeBadge: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
+  activeBadgeText: { fontSize: 11, fontWeight: '700' },
   metricasGrid: { flexDirection: 'row', gap: 10, marginBottom: 4 },
-  metricaCard: {
-    flex: 1, backgroundColor: '#F7F8FC', borderRadius: 12,
-    padding: 14, alignItems: 'center',
-    borderWidth: 1, borderColor: '#E2E8F0',
-  },
-  metricaNum: { fontSize: 22, fontWeight: '700', color: '#1A1A2E', marginBottom: 4 },
-  metricaLabel: { fontSize: 11, color: '#8892B0', fontWeight: '500' },
-  divider: { height: 1, backgroundColor: '#F0EFFF', marginVertical: 14 },
-  filaRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: '#F7F8FC' },
-  filaLabel: { fontSize: 13, color: '#8892B0' },
-  filaValue: { fontSize: 13, color: '#1A1A2E', fontWeight: '600' },
+  metricaCard: { flex: 1, borderRadius: 12, padding: 14, alignItems: 'center', borderWidth: 1 },
+  metricaNum: { fontSize: 22, fontWeight: '700', marginBottom: 4 },
+  metricaLabel: { fontSize: 11, fontWeight: '500' },
+  divider: { height: 1, marginVertical: 14 },
+  filaRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1 },
+  filaLabel: { fontSize: 13 },
+  filaValue: { fontSize: 13, fontWeight: '600' },
 });

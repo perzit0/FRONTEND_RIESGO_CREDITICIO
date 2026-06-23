@@ -5,9 +5,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import apiClient from '../../data/api/client';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function MetaScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [historial, setHistorial] = useState<any[]>([]);
 
@@ -25,15 +27,14 @@ export default function MetaScreen() {
   const categoria = ultimaEval?.categoria_riesgo ?? null;
 
   function getColor(cat: string) {
-    if (cat === 'bajo') return '#059669';
-    if (cat === 'medio') return '#D97706';
-    return '#DC2626';
+    if (cat === 'bajo') return colors.success;
+    if (cat === 'medio') return colors.warning;
+    return colors.danger;
   }
-
   function getBg(cat: string) {
-    if (cat === 'bajo') return '#ECFDF5';
-    if (cat === 'medio') return '#FFFBEB';
-    return '#FEF2F2';
+    if (cat === 'bajo') return colors.successBg;
+    if (cat === 'medio') return colors.warningBg;
+    return colors.dangerBg;
   }
 
   const pasosBajo = [
@@ -74,28 +75,28 @@ export default function MetaScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingWrap}>
-        <ActivityIndicator color="#6B4EFF" size="large" />
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scroll}>
+    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
 
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Volver</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={[styles.backText, { color: colors.primary }]}>← Volver</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Mi meta financiera</Text>
-        <Text style={styles.sub}>Pasos concretos para mejorar tu perfil crediticio</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Mi meta financiera</Text>
+        <Text style={[styles.sub, { color: colors.textSecondary }]}>Pasos concretos para mejorar tu perfil crediticio</Text>
       </View>
 
       {!ultimaEval && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Aún no tienes evaluaciones</Text>
-          <Text style={styles.cardSub}>Realiza tu primera evaluación crediticia para recibir un plan personalizado.</Text>
-          <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(user)/formulario')}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Aún no tienes evaluaciones</Text>
+          <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Realiza tu primera evaluación crediticia para recibir un plan personalizado.</Text>
+          <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: colors.primary }]} onPress={() => router.push('/(user)/formulario')}>
             <Text style={styles.btnPrimaryText}>Evaluar ahora</Text>
           </TouchableOpacity>
         </View>
@@ -103,39 +104,38 @@ export default function MetaScreen() {
 
       {ultimaEval && (
         <>
-          <View style={[styles.card, { borderLeftWidth: 4, borderLeftColor: getColor(categoria) }]}>
-            <Text style={styles.cardLabel}>Tu nivel actual</Text>
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder, borderLeftColor: getColor(categoria), borderLeftWidth: 4 }]}>
+            <Text style={[styles.cardLabel, { color: colors.textSecondary }]}>Tu nivel actual</Text>
             <View style={[styles.estadoBadge, { backgroundColor: getBg(categoria) }]}>
               <Text style={[styles.estadoText, { color: getColor(categoria) }]}>
                 Riesgo {categoria.charAt(0).toUpperCase() + categoria.slice(1)}
               </Text>
             </View>
-            <Text style={styles.cardSub}>
+            <Text style={[styles.cardSub, { color: colors.textMuted }]}>
               Última evaluación: {new Date(ultimaEval.fecha).toLocaleDateString('es-PE')}
             </Text>
           </View>
 
-          <View style={styles.metaCard}>
+          <View style={[styles.metaCard, { backgroundColor: colors.primaryLight, borderColor: colors.primaryBorder }]}>
             <Text style={styles.metaIcon}>🎯</Text>
-            <Text style={styles.metaTitulo}>{getTituloMeta()}</Text>
+            <Text style={[styles.metaTitulo, { color: colors.primary }]}>{getTituloMeta()}</Text>
           </View>
 
-          <Text style={styles.pasosTitle}>Plan de acción</Text>
+          <Text style={[styles.pasosTitle, { color: colors.textPrimary }]}>Plan de acción</Text>
+
           {getPasos().map((paso, i) => (
-            <View key={i} style={styles.pasoCard}>
-              <View style={[styles.pasoNum, {
-                backgroundColor: categoria === 'bajo' ? '#EDE9FF' : categoria === 'medio' ? '#FFFBEB' : '#FEF2F2'
-              }]}>
+            <View key={i} style={[styles.pasoCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+              <View style={[styles.pasoNum, { backgroundColor: getBg(categoria) }]}>
                 <Text style={[styles.pasoNumText, { color: getColor(categoria) }]}>{i + 1}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.pasoTitulo}>{paso.titulo}</Text>
-                <Text style={styles.pasoDesc}>{paso.desc}</Text>
+                <Text style={[styles.pasoTitulo, { color: colors.textPrimary }]}>{paso.titulo}</Text>
+                <Text style={[styles.pasoDesc, { color: colors.textSecondary }]}>{paso.desc}</Text>
               </View>
             </View>
           ))}
 
-          <TouchableOpacity style={styles.btnPrimary} onPress={() => router.push('/(user)/formulario')}>
+          <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: colors.primary }]} onPress={() => router.push('/(user)/formulario')}>
             <Text style={styles.btnPrimaryText}>Realizar nueva evaluación</Text>
           </TouchableOpacity>
         </>
@@ -147,44 +147,26 @@ export default function MetaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0EFFF' },
   scroll: { padding: 20 },
-  loadingWrap: { flex: 1, backgroundColor: '#F0EFFF', alignItems: 'center', justifyContent: 'center' },
   header: { marginBottom: 20 },
-  backBtn: { marginBottom: 12 },
-  backText: { color: '#6B4EFF', fontSize: 14, fontWeight: '500' },
-  title: { fontSize: 24, fontWeight: '700', color: '#1A1A2E' },
-  sub: { fontSize: 13, color: '#8892B0', marginTop: 4 },
-  card: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 18,
-    borderWidth: 1.5, borderColor: '#E2E8F0', marginBottom: 14,
-    shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06, shadowRadius: 12, elevation: 3,
-  },
-  cardTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A2E', marginBottom: 8 },
-  cardLabel: { fontSize: 12, color: '#8892B0', fontWeight: '500', marginBottom: 8 },
-  cardSub: { fontSize: 13, color: '#8892B0', marginTop: 6, lineHeight: 20 },
+  backText: { fontSize: 14, fontWeight: '500', marginBottom: 12 },
+  title: { fontSize: 24, fontWeight: '700' },
+  sub: { fontSize: 13, marginTop: 4 },
+  card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  cardTitle: { fontSize: 15, fontWeight: '700', marginBottom: 8 },
+  cardLabel: { fontSize: 12, fontWeight: '500', marginBottom: 8 },
+  cardSub: { fontSize: 13, marginTop: 6, lineHeight: 20 },
   estadoBadge: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, alignSelf: 'flex-start', marginBottom: 8 },
   estadoText: { fontSize: 14, fontWeight: '700' },
-  metaCard: {
-    backgroundColor: '#EDE9FF', borderRadius: 16, padding: 20,
-    alignItems: 'center', marginBottom: 20,
-    borderWidth: 1.5, borderColor: '#C4B5FD',
-  },
+  metaCard: { borderRadius: 16, padding: 20, alignItems: 'center', marginBottom: 20, borderWidth: 1.5 },
   metaIcon: { fontSize: 36, marginBottom: 10 },
-  metaTitulo: { fontSize: 17, fontWeight: '700', color: '#4C36C9', textAlign: 'center' },
-  pasosTitle: { fontSize: 16, fontWeight: '700', color: '#1A1A2E', marginBottom: 12 },
-  pasoCard: {
-    flexDirection: 'row', gap: 14, backgroundColor: '#fff',
-    borderRadius: 14, padding: 16, marginBottom: 10,
-    borderWidth: 1.5, borderColor: '#E2E8F0',
-    shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04, shadowRadius: 8, elevation: 2,
-  },
+  metaTitulo: { fontSize: 17, fontWeight: '700', textAlign: 'center' },
+  pasosTitle: { fontSize: 16, fontWeight: '700', marginBottom: 12 },
+  pasoCard: { flexDirection: 'row', gap: 14, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1.5, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
   pasoNum: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   pasoNumText: { fontSize: 14, fontWeight: '700' },
-  pasoTitulo: { fontSize: 14, fontWeight: '700', color: '#1A1A2E', marginBottom: 4 },
-  pasoDesc: { fontSize: 12, color: '#8892B0', lineHeight: 18 },
-  btnPrimary: { backgroundColor: '#6B4EFF', borderRadius: 12, padding: 15, alignItems: 'center', marginTop: 8 },
+  pasoTitulo: { fontSize: 14, fontWeight: '700', marginBottom: 4 },
+  pasoDesc: { fontSize: 12, lineHeight: 18 },
+  btnPrimary: { borderRadius: 12, padding: 15, alignItems: 'center', marginTop: 8 },
   btnPrimaryText: { color: '#fff', fontSize: 15, fontWeight: '700' },
 });
