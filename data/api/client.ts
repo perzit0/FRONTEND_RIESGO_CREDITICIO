@@ -2,7 +2,7 @@ import axios from 'axios';
 import { obtenerToken } from '../../storage/secureStorage';
 
 // En local apunta a localhost. Para producción cambiar a la URL de Render.
-export const BASE_URL = 'http://localhost:5000';
+export const BASE_URL = 'https://backend-riesgo-crediticio.onrender.com';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
