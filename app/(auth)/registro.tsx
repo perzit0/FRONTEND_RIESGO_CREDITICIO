@@ -35,12 +35,17 @@ export default function RegistroScreen() {
     }
     setLoading(true);
     try {
-      const res = await apiClient.post('/api/auth/registro', {
-        nombre: form.nombre, dni: form.dni, email: form.email,
-        telefono: `+51${form.telefono}`, password: form.password,
-      });
-      router.push({ pathname: '/(auth)/verificar-correo', params: { usuario_id: res.data.usuario_id, email: form.email } });
-    } catch (err: any) {
+  const res = await apiClient.post('/api/auth/registro', {
+    nombre: form.nombre,
+    dni: form.dni,
+    email: form.email,
+    telefono: `+51${form.telefono}`,
+    password: form.password,
+  });
+  const usuario_id = res.data.usuario_id;
+  const email = form.email;
+  router.push(`/(auth)/verificar-correo?usuario_id=${usuario_id}&email=${encodeURIComponent(email)}`);
+} catch (err: any) {
       const mensaje = err.response?.data?.error || '';
       if (mensaje.toLowerCase().includes('email') || mensaje.toLowerCase().includes('correo')) {
         Alert.alert('Correo ya registrado', 'Este correo ya tiene una cuenta.');
