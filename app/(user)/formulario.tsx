@@ -23,7 +23,7 @@ export default function FormularioScreen() {
   const [datos2, setDatos2] = useState({
     ingreso_mensual: '', monto_en_bancos: '', num_cuentas_bancarias: '',
     num_creditos_previos: '0', dias_mora_historico: '0',
-    ratio_deuda_ingreso: '0', num_lineas_credito_abiertas: '0',
+    deuda_mensual: '0', anios_historial_crediticio: '0',
     num_dependientes_economicos: '0',
   });
 
@@ -57,8 +57,8 @@ export default function FormularioScreen() {
         num_cuentas_bancarias: Number(datos2.num_cuentas_bancarias),
         num_creditos_previos: Number(datos2.num_creditos_previos),
         dias_mora_historico: Number(datos2.dias_mora_historico),
-        ratio_deuda_ingreso: Number(datos2.ratio_deuda_ingreso),
-        num_lineas_credito_abiertas: Number(datos2.num_lineas_credito_abiertas),
+        deuda_mensual: Number(datos2.deuda_mensual),
+        anios_historial_crediticio: Number(datos2.anios_historial_crediticio),
         num_dependientes_economicos: Number(datos2.num_dependientes_economicos),
       };
       const res = await apiClient.post('/api/user/evaluar-riesgo', payload);
@@ -162,6 +162,9 @@ export default function FormularioScreen() {
                 { label: 'Número de cuentas bancarias *', field: 'num_cuentas_bancarias', ph: 'Ej: 2' },
                 { label: 'Créditos previos', field: 'num_creditos_previos', ph: '0' },
                 { label: 'Días de mora histórico', field: 'dias_mora_historico', ph: '0' },
+                { label: 'Deuda mensual (S/.)', field: 'deuda_mensual', ph: 'Ej: 800' },
+                { label: 'Años de historial crediticio', field: 'anios_historial_crediticio', ph: 'Ej: 3' },
+                { label: 'Personas que dependen de tus ingresos', field: 'num_dependientes_economicos', ph: '0' },
               ].map(({ label, field, ph }) => (
                 <View key={field}>
                   <Text style={[styles.label, { color: colors.textLabel }]}>{label}</Text>
