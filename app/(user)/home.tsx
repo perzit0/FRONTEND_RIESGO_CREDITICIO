@@ -15,6 +15,7 @@ export default function HomeScreen() {
   const [perfil, setPerfil] = useState<any>(null);
   const [historial, setHistorial] = useState<any[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   useEffect(() => { cargarDatos(); }, []);
 
@@ -66,8 +67,8 @@ export default function HomeScreen() {
             Hola, {perfil?.nombre?.split(' ')[0] ?? 'Usuario'}
           </Text>
         </View>
-        <TouchableOpacity onPress={handleCerrarSesion} style={[styles.logoutBtn, { borderColor: colors.logoutBorder, backgroundColor: colors.card }]}>
-          <Text style={[styles.logoutText, { color: colors.logoutText }]}>Salir</Text>
+        <TouchableOpacity onPress={() => setMenuVisible(true)} style={[styles.gearBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+          <Text style={{ fontSize: 20 }}>⚙️</Text>
         </TouchableOpacity>
       </View>
 
@@ -95,9 +96,7 @@ export default function HomeScreen() {
       <View style={styles.accionesGrid}>
         {[
           { bg: colors.primary, icon: '+', label: 'Nueva evaluación', ruta: '/(user)/formulario' },
-          { bg: '#1A1A2E', icon: '👥', label: 'Comunidad', ruta: '/(user)/comunidad' },
           { bg: colors.success, icon: '🎯', label: 'Mi meta', ruta: '/(user)/meta' },
-          { bg: colors.warning, icon: '👤', label: 'Mi perfil', ruta: '/(user)/perfil' },
         ].map(({ bg, icon, label, ruta }) => (
           <TouchableOpacity key={ruta} style={[styles.accionBtn, { backgroundColor: bg }]} onPress={() => router.push(ruta as any)}>
             <Text style={styles.accionIcon}>{icon}</Text>
@@ -112,7 +111,12 @@ export default function HomeScreen() {
 
       {historial.length > 0 && (
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Historial de evaluaciones</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary, marginBottom: 0 }]}>Historial de evaluaciones</Text>
+            <TouchableOpacity onPress={() => router.push('/(user)/historial')}>
+              <Text style={{ color: colors.primary, fontSize: 13, fontWeight: '600' }}>Ver todo →</Text>
+            </TouchableOpacity>
+          </View>
           {historial.slice(0, 5).map((e: any) => (
             <View key={e.id} style={[styles.historialRow, { borderBottomColor: colors.divider }]}>
               <View style={[styles.historialDot, { backgroundColor: getColorCat(e.categoria_riesgo) }]} />
@@ -133,6 +137,33 @@ export default function HomeScreen() {
           ))}
         </View>
       )}
+
+      {/* Menú de la tuerquita */}
+      <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
+        <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setMenuVisible(false)}>
+          <View style={[styles.menuCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            {[
+              { label: '👤  Mi perfil', ruta: '/(user)/perfil' },
+              { label: '👥  Comunidad', ruta: '/(user)/comunidad' },
+              { label: '⚙️  Configuración', ruta: '/(user)/configuracion' },
+            ].map(({ label, ruta }) => (
+              <TouchableOpacity
+                key={ruta}
+                style={[styles.menuItem, { borderBottomColor: colors.divider }]}
+                onPress={() => { setMenuVisible(false); router.push(ruta as any); }}
+              >
+                <Text style={[styles.menuItemText, { color: colors.textPrimary }]}>{label}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => { setMenuVisible(false); handleCerrarSesion(); }}
+            >
+              <Text style={[styles.menuItemText, { color: colors.danger }]}>🚪  Cerrar sesión</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
@@ -177,8 +208,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 },
   headerSub: { fontSize: 12, fontWeight: '600', marginBottom: 2 },
   headerTitle: { fontSize: 24, fontWeight: '700' },
-  logoutBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 10, borderWidth: 1.5 },
-  logoutText: { fontSize: 13, fontWeight: '500' },
+  gearBtn: { width: 40, height: 40, borderRadius: 12, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   cardLabel: { fontSize: 12, fontWeight: '500', marginBottom: 8 },
   cardSub: { fontSize: 13 },
@@ -199,6 +229,10 @@ const styles = StyleSheet.create({
   historialFecha: { fontSize: 11, marginTop: 2 },
   historialBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   historialBadgeText: { fontSize: 11, fontWeight: '700' },
+  menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 60, paddingRight: 20 },
+  menuCard: { borderRadius: 16, borderWidth: 1.5, width: 220, paddingVertical: 6, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 12, elevation: 6 },
+  menuItem: { paddingVertical: 14, paddingHorizontal: 18, borderBottomWidth: 1 },
+  menuItemText: { fontSize: 14, fontWeight: '600' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalCard: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 28, maxHeight: '80%' },
   modalTitle: { fontSize: 20, fontWeight: '700', marginBottom: 16 },
