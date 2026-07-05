@@ -131,7 +131,7 @@ export default function PerfilScreen() {
               <Image source={{ uri: perfil.foto_base64 }} style={styles.avatar} />
             ) : (
               <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primaryLight, borderColor: colors.primaryBorder }]}>
-                <Text style={{ fontSize: 32 }}>👤</Text>
+                <Text style={{ fontSize: 40 }}>👤</Text>
               </View>
             )}
             <View style={[styles.avatarEditBadge, { backgroundColor: colors.primary }]}>
@@ -257,9 +257,9 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1.5, borderRadius: 12, padding: 13, fontSize: 14, marginBottom: 16 },
   btnPrimary: { borderRadius: 12, padding: 14, alignItems: 'center', marginTop: 4 },
   btnPrimaryText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  avatarWrap: { alignSelf: 'center', marginBottom: 6 },
-  avatar: { width: 90, height: 90, borderRadius: 45 },
-  avatarPlaceholder: { width: 90, height: 90, borderRadius: 45, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  avatarEditBadge: { position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
+  avatarWrap: { alignSelf: 'center', marginBottom: 10 },
+  avatar: { width: 140, height: 140, borderRadius: 70 },
+  avatarPlaceholder: { width: 140, height: 140, borderRadius: 70, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  avatarEditBadge: { position: 'absolute', bottom: 4, right: 4, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
   usernameText: { textAlign: 'center', fontSize: 13, fontWeight: '600', marginBottom: 16 },
 });
