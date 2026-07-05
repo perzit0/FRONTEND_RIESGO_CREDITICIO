@@ -139,7 +139,7 @@ export default function HistorialScreen() {
               </View>
 
               <Text style={[styles.score, { color: colors.textPrimary }]}>
-                Score: {e.score_final?.toFixed(1) ?? '—'}
+                Score: {((e.score_final ?? 0) * 100).toFixed(1)} / 100
               </Text>
 
               <TouchableOpacity
