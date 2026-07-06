@@ -14,9 +14,12 @@ export default function FormularioScreen() {
   const [paso, setPaso] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  // Pregunta previa: si nunca ha tenido credito, autocompletamos los
+  // campos relacionados en 0 para no pedirle datos que no tiene.
+  const [tuvoCredito, setTuvoCredito] = useState<boolean | null>(null);
+
   const [datos1, setDatos1] = useState({
     edad: '', tipo_empleo: 'dependiente', antiguedad_laboral_meses: '',
-    nivel_educativo: 'universitario', estado_civil: 'soltero',
     tipo_vivienda: 'propia', num_dependientes_hogar: '0',
   });
 
@@ -24,7 +27,6 @@ export default function FormularioScreen() {
     ingreso_mensual: '', monto_en_bancos: '', num_cuentas_bancarias: '',
     num_creditos_previos: '0', dias_mora_historico: '0',
     deuda_mensual: '0', anios_historial_crediticio: '0',
-    num_dependientes_economicos: '0',
   });
 
   function update1(field: string, value: string) { setDatos1(prev => ({ ...prev, [field]: value })); }
@@ -39,6 +41,21 @@ export default function FormularioScreen() {
       Alert.alert('Error', 'Ingresa tu antigüedad laboral en meses (puede ser 0)'); return;
     }
     setPaso(2);
+  }
+
+  function handleSeleccionCredito(tuvo: boolean) {
+    setTuvoCredito(tuvo);
+    if (!tuvo) {
+      // Autocompletar: si nunca tuvo credito, estos campos quedan en 0
+      // y no se le vuelven a pedir, para que el modelo reciba datos
+      // coherentes en vez de "basura" o campos vacios.
+      setDatos2(prev => ({
+        ...prev,
+        num_creditos_previos: '0',
+        dias_mora_historico: '0',
+        anios_historial_crediticio: '0',
+      }));
+    }
   }
 
   async function handleAnalizar() {
@@ -59,7 +76,6 @@ export default function FormularioScreen() {
         dias_mora_historico: Number(datos2.dias_mora_historico),
         deuda_mensual: Number(datos2.deuda_mensual),
         anios_historial_crediticio: Number(datos2.anios_historial_crediticio),
-        num_dependientes_economicos: Number(datos2.num_dependientes_economicos),
       };
       const res = await apiClient.post('/api/user/evaluar-riesgo', payload);
       router.push({ pathname: '/(user)/resultado', params: { data: JSON.stringify(res.data) } });
@@ -70,7 +86,7 @@ export default function FormularioScreen() {
     }
   }
 
-  function Opcion({ value, selected, onPress, label }: { value: string, selected: boolean, onPress: () => void, label: string }) {
+  function Opcion({ selected, onPress, label }: { selected: boolean, onPress: () => void, label: string }) {
     return (
       <TouchableOpacity
         style={[styles.optionBtn, {
@@ -114,34 +130,20 @@ export default function FormularioScreen() {
               <Text style={[styles.label, { color: colors.textLabel }]}>Antigüedad laboral (meses) *</Text>
               <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.inputBorder, color: colors.textPrimary }]} placeholder="Ej: 36" placeholderTextColor={colors.textMuted} keyboardType="numeric" value={datos1.antiguedad_laboral_meses} onChangeText={v => update1('antiguedad_laboral_meses', v)} />
 
-              <Text style={[styles.label, { color: colors.textLabel }]}>Número de dependientes en el hogar</Text>
+              <Text style={[styles.label, { color: colors.textLabel }]}>Número de dependientes</Text>
               <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.inputBorder, color: colors.textPrimary }]} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="numeric" value={datos1.num_dependientes_hogar} onChangeText={v => update1('num_dependientes_hogar', v)} />
 
               <Text style={[styles.label, { color: colors.textLabel }]}>Tipo de empleo</Text>
               <View style={styles.optionGroup}>
                 {['dependiente', 'independiente', 'desempleado'].map(op => (
-                  <Opcion key={op} value={op} selected={datos1.tipo_empleo === op} onPress={() => update1('tipo_empleo', op)} label={op.charAt(0).toUpperCase() + op.slice(1)} />
-                ))}
-              </View>
-
-              <Text style={[styles.label, { color: colors.textLabel }]}>Nivel educativo</Text>
-              <View style={styles.optionGroup}>
-                {['secundaria', 'tecnico', 'universitario', 'posgrado'].map(op => (
-                  <Opcion key={op} value={op} selected={datos1.nivel_educativo === op} onPress={() => update1('nivel_educativo', op)} label={op.charAt(0).toUpperCase() + op.slice(1)} />
-                ))}
-              </View>
-
-              <Text style={[styles.label, { color: colors.textLabel }]}>Estado civil</Text>
-              <View style={styles.optionGroup}>
-                {['soltero', 'casado', 'conviviente', 'otro'].map(op => (
-                  <Opcion key={op} value={op} selected={datos1.estado_civil === op} onPress={() => update1('estado_civil', op)} label={op.charAt(0).toUpperCase() + op.slice(1)} />
+                  <Opcion key={op} selected={datos1.tipo_empleo === op} onPress={() => update1('tipo_empleo', op)} label={op.charAt(0).toUpperCase() + op.slice(1)} />
                 ))}
               </View>
 
               <Text style={[styles.label, { color: colors.textLabel }]}>Tipo de vivienda</Text>
               <View style={styles.optionGroup}>
                 {['propia', 'alquilada', 'familiar'].map(op => (
-                  <Opcion key={op} value={op} selected={datos1.tipo_vivienda === op} onPress={() => update1('tipo_vivienda', op)} label={op.charAt(0).toUpperCase() + op.slice(1)} />
+                  <Opcion key={op} selected={datos1.tipo_vivienda === op} onPress={() => update1('tipo_vivienda', op)} label={op.charAt(0).toUpperCase() + op.slice(1)} />
                 ))}
               </View>
 
@@ -156,15 +158,17 @@ export default function FormularioScreen() {
               <Text style={[styles.title, { color: colors.textPrimary }]}>Datos financieros</Text>
               <Text style={[styles.sub, { color: colors.textSecondary }]}>Información bancaria y crediticia</Text>
 
+              <Text style={[styles.label, { color: colors.textLabel }]}>¿Has tenido un crédito antes? *</Text>
+              <View style={styles.optionGroup}>
+                <Opcion selected={tuvoCredito === true} onPress={() => handleSeleccionCredito(true)} label="Sí" />
+                <Opcion selected={tuvoCredito === false} onPress={() => handleSeleccionCredito(false)} label="No" />
+              </View>
+
               {[
                 { label: 'Ingresos mensuales (S/.) *', field: 'ingreso_mensual', ph: 'Ej: 3500' },
                 { label: 'Monto total en cuentas bancarias (S/.) *', field: 'monto_en_bancos', ph: 'Ej: 8000' },
                 { label: 'Número de cuentas bancarias *', field: 'num_cuentas_bancarias', ph: 'Ej: 2' },
-                { label: 'Créditos previos', field: 'num_creditos_previos', ph: '0' },
-                { label: 'Días de mora histórico', field: 'dias_mora_historico', ph: '0' },
                 { label: 'Deuda mensual (S/.)', field: 'deuda_mensual', ph: 'Ej: 800' },
-                { label: 'Años de historial crediticio', field: 'anios_historial_crediticio', ph: 'Ej: 3' },
-                { label: 'Personas que dependen de tus ingresos', field: 'num_dependientes_economicos', ph: '0' },
               ].map(({ label, field, ph }) => (
                 <View key={field}>
                   <Text style={[styles.label, { color: colors.textLabel }]}>{label}</Text>
@@ -178,11 +182,44 @@ export default function FormularioScreen() {
                 </View>
               ))}
 
+              {tuvoCredito === true && (
+                <>
+                  {[
+                    { label: 'Créditos previos', field: 'num_creditos_previos', ph: '0' },
+                    { label: 'Días de mora histórico', field: 'dias_mora_historico', ph: '0' },
+                    { label: 'Años de historial crediticio', field: 'anios_historial_crediticio', ph: 'Ej: 3' },
+                  ].map(({ label, field, ph }) => (
+                    <View key={field}>
+                      <Text style={[styles.label, { color: colors.textLabel }]}>{label}</Text>
+                      <TextInput
+                        style={[styles.input, { backgroundColor: colors.input, borderColor: colors.inputBorder, color: colors.textPrimary }]}
+                        placeholder={ph} placeholderTextColor={colors.textMuted}
+                        keyboardType="numeric"
+                        value={(datos2 as any)[field]}
+                        onChangeText={v => update2(field, v)}
+                      />
+                    </View>
+                  ))}
+                </>
+              )}
+
+              {tuvoCredito === false && (
+                <View style={[styles.infoBox, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
+                  <Text style={[styles.infoBoxText, { color: colors.textSecondary }]}>
+                    Como no has tenido créditos antes, no necesitas llenar créditos previos, mora ni historial crediticio — quedan en 0 automáticamente.
+                  </Text>
+                </View>
+              )}
+
               <View style={styles.rowBtns}>
                 <TouchableOpacity style={[styles.btnSecondary, { borderColor: colors.primary }]} onPress={() => setPaso(1)}>
                   <Text style={[styles.btnSecondaryText, { color: colors.primary }]}>← Atrás</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.btnPrimary, { flex: 1, backgroundColor: colors.primary }]} onPress={handleAnalizar} disabled={loading}>
+                <TouchableOpacity
+                  style={[styles.btnPrimary, { flex: 1, backgroundColor: colors.primary, opacity: tuvoCredito === null ? 0.5 : 1 }]}
+                  onPress={handleAnalizar}
+                  disabled={loading || tuvoCredito === null}
+                >
                   {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnPrimaryText}>Analizar mi perfil</Text>}
                 </TouchableOpacity>
               </View>
@@ -210,6 +247,8 @@ const styles = StyleSheet.create({
   optionGroup: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   optionBtn: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1.5 },
   optionText: { fontSize: 13 },
+  infoBox: { borderRadius: 10, borderWidth: 1, padding: 12, marginBottom: 16 },
+  infoBoxText: { fontSize: 12, lineHeight: 18 },
   rowBtns: { flexDirection: 'row', gap: 10, marginTop: 4 },
   btnPrimary: { borderRadius: 12, padding: 14, alignItems: 'center' },
   btnPrimaryText: { color: '#fff', fontSize: 15, fontWeight: '700' },

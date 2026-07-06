@@ -14,7 +14,6 @@ const ETIQUETAS: Record<string, string> = {
   ingreso_mensual: 'Ingreso mensual',
   num_creditos_previos: 'Créditos previos',
   dias_mora_historico: 'Días de mora histórico',
-  num_dependientes_economicos: 'Dependientes económicos',
   monto_en_bancos: 'Monto en bancos',
   num_cuentas_bancarias: 'Cuentas bancarias',
   deuda_mensual: 'Deuda mensual',
@@ -22,10 +21,8 @@ const ETIQUETAS: Record<string, string> = {
   edad: 'Edad',
   antiguedad_laboral_meses: 'Antigüedad laboral (meses)',
   tipo_empleo: 'Tipo de empleo',
-  nivel_educativo: 'Nivel educativo',
-  estado_civil: 'Estado civil',
   tipo_vivienda: 'Tipo de vivienda',
-  num_dependientes_hogar: 'Dependientes en el hogar',
+  num_dependientes_hogar: 'Dependientes',
 };
 
 export default function HistorialScreen() {

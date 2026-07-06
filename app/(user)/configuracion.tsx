@@ -11,6 +11,8 @@ export default function ConfiguracionScreen() {
   const router = useRouter();
   const { colors, isDark, toggleTheme } = useTheme();
   const [seccion, setSeccion] = useState<'inicio' | 'password' | 'telefono'>('inicio');
+  const [loading, setLoading] = useState(true);
+  const [perfil, setPerfil] = useState<any>(null);
 
   const [codigoPassword, setCodigoPassword] = useState('');
   const [nuevaPassword, setNuevaPassword] = useState('');
@@ -21,12 +23,21 @@ export default function ConfiguracionScreen() {
 
   const [nuevoTelefono, setNuevoTelefono] = useState('');
   const [codigoCorreo, setCodigoCorreo] = useState('');
-  const [codigoSms, setCodigoSms] = useState('');
-  const [telefonoPaso, setTelefonoPaso] = useState<1 | 2 | 3>(1);
+  const [telefonoPaso, setTelefonoPaso] = useState<1 | 2>(1);
 
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
   const [exito, setExito] = useState('');
+
+  useEffect(() => { cargarPerfil(); }, []);
+
+  async function cargarPerfil() {
+    try {
+      const res = await apiClient.get('/api/user/mi-perfil');
+      setPerfil(res.data);
+    } catch { }
+    finally { setLoading(false); }
+  }
 
   function resetMensajes() { setError(''); setExito(''); }
 
@@ -73,28 +84,25 @@ export default function ConfiguracionScreen() {
     } finally { setGuardando(false); }
   }
 
-  async function handleConfirmarCorreoTelefono() {
+  async function handleConfirmarCambioTelefono() {
     resetMensajes();
     setGuardando(true);
     try {
       await apiClient.post('/api/user/confirmar-cambio-telefono', { codigo_correo: codigoCorreo });
-      setTelefonoPaso(3);
-      setExito('Correo confirmado. Te enviamos un SMS al nuevo número');
+      setExito('Teléfono actualizado correctamente');
+      setPerfil((p: any) => ({ ...p, telefono: `+51${nuevoTelefono}` }));
+      setTimeout(() => { setSeccion('inicio'); setTelefonoPaso(1); setNuevoTelefono(''); setCodigoCorreo(''); }, 1500);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Código inválido');
     } finally { setGuardando(false); }
   }
 
-  async function handleVerificarSms() {
-    resetMensajes();
-    setGuardando(true);
-    try {
-      await apiClient.post('/api/user/verificar-nuevo-telefono', { codigo_sms: codigoSms });
-      setExito('Teléfono actualizado correctamente');
-      setTimeout(() => { setSeccion('inicio'); setTelefonoPaso(1); }, 1500);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Código SMS inválido');
-    } finally { setGuardando(false); }
+  if (loading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    );
   }
 
   return (
@@ -113,8 +121,24 @@ export default function ConfiguracionScreen() {
       {seccion === 'inicio' && (
         <>
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Datos personales</Text>
+            {[
+              { label: 'Nombre', value: perfil?.nombre },
+              { label: 'Username', value: perfil?.username ? `@${perfil.username}` : 'No configurado' },
+              { label: 'Correo', value: perfil?.email },
+              { label: 'DNI', value: perfil?.dni },
+              { label: 'Teléfono', value: perfil?.telefono },
+            ].map(({ label, value }) => (
+              <View key={label} style={[styles.infoRow, { borderBottomColor: colors.divider }]}>
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{label}</Text>
+                <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{value}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Apariencia</Text>
-            <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}>
+            <View style={[styles.infoRow, { borderBottomColor: colors.divider, borderBottomWidth: 0 }]}>
               <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>
                 {isDark ? 'Modo oscuro' : 'Modo claro'}
               </Text>
@@ -188,7 +212,7 @@ export default function ConfiguracionScreen() {
           <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Cambiar teléfono</Text>
           {telefonoPaso === 1 && (
             <>
-              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Ingresa tu nuevo número. Te enviaremos un código al correo para confirmar.</Text>
+              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Ingresa tu nuevo número. Te enviaremos un código a tu correo para confirmarlo.</Text>
               <Text style={[styles.label, { color: colors.textLabel }]}>Nuevo número de teléfono</Text>
               <View style={[styles.phoneWrap, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
                 <View style={[styles.phonePrefix, { backgroundColor: colors.primaryLight, borderRightColor: colors.inputBorder }]}>
@@ -197,26 +221,16 @@ export default function ConfiguracionScreen() {
                 <TextInput style={[styles.phoneInput, { color: colors.textPrimary }]} placeholder="999 999 999" placeholderTextColor={colors.textMuted} keyboardType="phone-pad" maxLength={9} value={nuevoTelefono} onChangeText={setNuevoTelefono} />
               </View>
               <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: colors.primary }]} onPress={handleSolicitarCambioTelefono} disabled={guardando}>
-                {guardando ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnPrimaryText}>Continuar</Text>}
+                {guardando ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnPrimaryText}>Enviar código al correo</Text>}
               </TouchableOpacity>
             </>
           )}
           {telefonoPaso === 2 && (
             <>
-              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Ingresa el código que enviamos a tu correo.</Text>
+              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Ingresa el código que enviamos a tu correo para confirmar el nuevo número.</Text>
               <Text style={[styles.label, { color: colors.textLabel }]}>Código del correo</Text>
               <TextInput style={[styles.input, styles.inputCodigo, { backgroundColor: colors.input, borderColor: colors.inputBorder, color: colors.textPrimary }]} placeholder="000000" placeholderTextColor={colors.textMuted} keyboardType="numeric" maxLength={6} value={codigoCorreo} onChangeText={setCodigoCorreo} />
-              <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: colors.primary }]} onPress={handleConfirmarCorreoTelefono} disabled={guardando}>
-                {guardando ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnPrimaryText}>Verificar correo</Text>}
-              </TouchableOpacity>
-            </>
-          )}
-          {telefonoPaso === 3 && (
-            <>
-              <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Ingresa el código SMS enviado al nuevo número.</Text>
-              <Text style={[styles.label, { color: colors.textLabel }]}>Código SMS</Text>
-              <TextInput style={[styles.input, styles.inputCodigo, { backgroundColor: colors.input, borderColor: colors.inputBorder, color: colors.textPrimary }]} placeholder="000000" placeholderTextColor={colors.textMuted} keyboardType="numeric" maxLength={6} value={codigoSms} onChangeText={setCodigoSms} />
-              <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: colors.primary }]} onPress={handleVerificarSms} disabled={guardando}>
+              <TouchableOpacity style={[styles.btnPrimary, { backgroundColor: colors.primary }]} onPress={handleConfirmarCambioTelefono} disabled={guardando}>
                 {guardando ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnPrimaryText}>Confirmar nuevo teléfono</Text>}
               </TouchableOpacity>
             </>
@@ -243,6 +257,7 @@ const styles = StyleSheet.create({
   cardSub: { fontSize: 13, marginBottom: 16, lineHeight: 20 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1 },
   infoLabel: { fontSize: 13, fontWeight: '500' },
+  infoValue: { fontSize: 13, fontWeight: '600' },
   opcionBtn: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14 },
   opcionText: { fontSize: 14, fontWeight: '500' },
   opcionArrow: { fontSize: 16 },

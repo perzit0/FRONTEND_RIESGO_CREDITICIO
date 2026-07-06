@@ -53,9 +53,8 @@ export default function PerfilScreen() {
       setPerfil((p: any) => ({ ...p, nombre: nuevoNombre }));
       setTimeout(() => setSeccion('inicio'), 1500);
     } catch (err: any) {
-      console.log('ERROR FOTO:', err.message, err.response?.status, err.response?.data);
-      setError(err.response?.data?.error || 'Error al subir la foto');
-    } finally { setSubiendoFoto(false); }
+      setError(err.response?.data?.error || 'Error al actualizar nombre');
+    } finally { setGuardando(false); }
   }
 
   async function handleGuardarUsername() {
@@ -83,7 +82,7 @@ export default function PerfilScreen() {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.5,
+      quality: 0.3,
       base64: true,
     });
 
@@ -95,7 +94,7 @@ export default function PerfilScreen() {
     setSubiendoFoto(true);
     resetMensajes();
     try {
-      await apiClient.post('/api/user/actualizar-foto', { foto_base64: dataUri });
+      await apiClient.post('/api/user/actualizar-foto', { foto_base64: dataUri }, { timeout: 60000 });
       setPerfil((p: any) => ({ ...p, foto_base64: dataUri }));
       setExito('Foto de perfil actualizada');
     } catch (err: any) {
@@ -131,32 +130,17 @@ export default function PerfilScreen() {
               <Image source={{ uri: perfil.foto_base64 }} style={styles.avatar} />
             ) : (
               <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primaryLight, borderColor: colors.primaryBorder }]}>
-                <Text style={{ fontSize: 40 }}>👤</Text>
+                <Text style={{ fontSize: 48 }}>👤</Text>
               </View>
             )}
             <View style={[styles.avatarEditBadge, { backgroundColor: colors.primary }]}>
-              {subiendoFoto ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ fontSize: 12 }}>✏️</Text>}
+              {subiendoFoto ? <ActivityIndicator color="#fff" size="small" /> : <Text style={{ fontSize: 16 }}>✏️</Text>}
             </View>
           </TouchableOpacity>
           {perfil?.username && (
             <Text style={[styles.usernameText, { color: colors.textSecondary }]}>@{perfil.username}</Text>
           )}
-
-          <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Información personal</Text>
-            {[
-              { label: 'Nombre', value: perfil?.nombre },
-              { label: 'Username', value: perfil?.username ? `@${perfil.username}` : 'No configurado' },
-              { label: 'Correo', value: perfil?.email },
-              { label: 'DNI', value: perfil?.dni },
-              { label: 'Teléfono', value: perfil?.telefono },
-            ].map(({ label, value }) => (
-              <View key={label} style={[styles.infoRow, { borderBottomColor: colors.divider }]}>
-                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>{label}</Text>
-                <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{value}</Text>
-              </View>
-            ))}
-          </View>
+          <Text style={[styles.nombreDestacado, { color: colors.textPrimary }]}>{perfil?.nombre}</Text>
 
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Tu evolución</Text>
@@ -164,7 +148,7 @@ export default function PerfilScreen() {
           </View>
 
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Editar información</Text>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Personalización</Text>
             <TouchableOpacity
               style={[styles.opcionBtn, { borderBottomColor: colors.divider, borderBottomWidth: 1 }]}
               onPress={() => { resetMensajes(); setSeccion('nombre'); }}
@@ -183,9 +167,9 @@ export default function PerfilScreen() {
 
           <TouchableOpacity
             style={[styles.card, styles.configCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
-            onPress={() => router.push('/(user)/configuracion')}
+            onPress={() => router.push('/(user)/configuracion' as any)}
           >
-            <Text style={[styles.cardTitle, { color: colors.textPrimary, marginBottom: 0 }]}>⚙️ Configuración y seguridad</Text>
+            <Text style={[styles.cardTitle, { color: colors.textPrimary, marginBottom: 0 }]}>⚙️ Configuración y datos personales</Text>
             <Text style={[styles.opcionArrow, { color: colors.primary }]}>→</Text>
           </TouchableOpacity>
         </>
@@ -215,6 +199,7 @@ export default function PerfilScreen() {
             <Text style={[styles.backText, { color: colors.primary }]}>← Volver</Text>
           </TouchableOpacity>
           <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Cambiar username</Text>
+          <Text style={[styles.cardSub, { color: colors.textSecondary }]}>Podrás iniciar sesión usando este username o tu correo.</Text>
           <Text style={[styles.label, { color: colors.textLabel }]}>Nuevo username</Text>
           <TextInput
             style={[styles.input, { backgroundColor: colors.input, borderColor: colors.inputBorder, color: colors.textPrimary }]}
@@ -247,9 +232,7 @@ const styles = StyleSheet.create({
   card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
   configCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontSize: 15, fontWeight: '700', marginBottom: 14 },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1 },
-  infoLabel: { fontSize: 13, fontWeight: '500' },
-  infoValue: { fontSize: 13, fontWeight: '600' },
+  cardSub: { fontSize: 13, marginTop: -8, marginBottom: 14 },
   opcionBtn: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14 },
   opcionText: { fontSize: 14, fontWeight: '500' },
   opcionArrow: { fontSize: 16 },
@@ -261,5 +244,6 @@ const styles = StyleSheet.create({
   avatar: { width: 140, height: 140, borderRadius: 70 },
   avatarPlaceholder: { width: 140, height: 140, borderRadius: 70, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   avatarEditBadge: { position: 'absolute', bottom: 4, right: 4, width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#fff' },
-  usernameText: { textAlign: 'center', fontSize: 13, fontWeight: '600', marginBottom: 16 },
+  usernameText: { textAlign: 'center', fontSize: 13, fontWeight: '600', marginBottom: 2 },
+  nombreDestacado: { textAlign: 'center', fontSize: 18, fontWeight: '700', marginBottom: 20 },
 });

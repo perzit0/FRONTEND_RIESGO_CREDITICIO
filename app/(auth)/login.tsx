@@ -12,7 +12,7 @@ import { useTheme } from '../../context/ThemeContext';
 export default function LoginScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const [email, setEmail] = useState('');
+  const [identificador, setIdentificador] = useState('');
   const [password, setPassword] = useState('');
   const [verPassword, setVerPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,10 +20,10 @@ export default function LoginScreen() {
 
   async function handleLogin() {
     setError('');
-    if (!email || !password) { setError('Completa todos los campos'); return; }
+    if (!identificador || !password) { setError('Completa todos los campos'); return; }
     setLoading(true);
     try {
-      const res = await apiClient.post('/api/auth/login', { email, password });
+      const res = await apiClient.post('/api/auth/login', { identificador, password });
       await guardarToken(res.data.token);
       await guardarRol(res.data.rol);
       if (res.data.rol === 'admin') {
@@ -60,15 +60,14 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          <Text style={[styles.label, { color: colors.textLabel }]}>Correo electrónico</Text>
+          <Text style={[styles.label, { color: colors.textLabel }]}>Correo o username</Text>
           <TextInput
             style={[styles.input, { backgroundColor: colors.input, borderColor: colors.inputBorder, color: colors.textPrimary }]}
-            placeholder="tucorreo@email.com"
+            placeholder="tucorreo@email.com o @tu_username"
             placeholderTextColor={colors.textMuted}
-            keyboardType="email-address"
             autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
+            value={identificador}
+            onChangeText={setIdentificador}
           />
 
           <Text style={[styles.label, { color: colors.textLabel }]}>Contraseña</Text>

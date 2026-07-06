@@ -31,7 +31,9 @@ export default function VerificarCorreoScreen() {
     setLoading(true);
     try {
       await apiClient.post('/api/auth/verificar-correo', { usuario_id: Number(usuario_id), codigo });
-      router.push({ pathname: '/(auth)/verificar-sms', params: { usuario_id } });
+      // Ya no se requiere verificacion por SMS: el registro queda completo
+      // apenas se verifica el correo. Se redirige directo al login.
+      router.replace('/(auth)/login');
     } catch (err: any) {
       alert(err.response?.data?.error || 'Código inválido');
     } finally {

@@ -8,13 +8,15 @@ import apiClient from '../../data/api/client';
 import { cerrarSesion } from '../../storage/secureStorage';
 import { useTheme } from '../../context/ThemeContext';
 
+type ModalKey = 'riesgo' | 'quienes' | 'ofrecemos' | 'soporte' | null;
+
 export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [perfil, setPerfil] = useState<any>(null);
   const [historial, setHistorial] = useState<any[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [modalActivo, setModalActivo] = useState<ModalKey>(null);
   const [menuVisible, setMenuVisible] = useState(false);
 
   useEffect(() => { cargarDatos(); }, []);
@@ -56,6 +58,73 @@ export default function HomeScreen() {
   }
 
   const ultimaEval = historial[0] ?? null;
+
+  const modalesContenido: Record<Exclude<ModalKey, null>, { titulo: string; render: () => JSX.Element }> = {
+    riesgo: {
+      titulo: '¿Qué es el riesgo crediticio?',
+      render: () => (
+        <>
+          <Text style={[styles.modalText, { color: colors.textSecondary }]}>
+            El <Text style={[styles.bold, { color: colors.textPrimary }]}>riesgo crediticio</Text> es la probabilidad de que una persona no pueda cumplir con sus obligaciones financieras en el tiempo acordado.
+          </Text>
+          <Text style={[styles.modalText, { color: colors.textSecondary }]}>
+            En términos simples: es una medida de qué tan confiable eres financieramente ante una entidad bancaria o prestamista.
+          </Text>
+          <Text style={[styles.modalSubtitle, { color: colors.textPrimary }]}>¿Cómo se clasifica?</Text>
+          {[
+            { color: colors.success, label: 'Riesgo Bajo', desc: 'Buena salud financiera. Pagas a tiempo y tienes ingresos estables.' },
+            { color: colors.warning, label: 'Riesgo Medio', desc: 'Hay aspectos a mejorar. Puedes acceder a créditos, pero con más restricciones.' },
+            { color: colors.danger, label: 'Riesgo Alto', desc: 'Situación financiera delicada. Se recomienda tomar medidas para mejorar tu perfil.' },
+          ].map(({ color, label, desc }) => (
+            <View key={label} style={styles.modalRiesgoRow}>
+              <View style={[styles.modalRiesgoDot, { backgroundColor: color }]} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.modalRiesgoLabel, { color: colors.textPrimary }]}>{label}</Text>
+                <Text style={[styles.modalRiesgoDesc, { color: colors.textSecondary }]}>{desc}</Text>
+              </View>
+            </View>
+          ))}
+          <Text style={[styles.modalText, { color: colors.textSecondary, marginTop: 8 }]}>
+            El score que calculamos va de 0 a 100: mientras más alto, mayor la probabilidad estimada de incumplimiento según nuestro modelo de IA.
+          </Text>
+        </>
+      ),
+    },
+    quienes: {
+      titulo: 'Quiénes somos',
+      render: () => (
+        <Text style={[styles.modalText, { color: colors.textSecondary }]}>
+          CreditoSmart es un proyecto académico de la Universidad Nacional Federico Villarreal, desarrollado para evaluar el riesgo crediticio mediante modelos de Machine Learning, con el objetivo de acercar herramientas de análisis financiero a más personas.
+        </Text>
+      ),
+    },
+    ofrecemos: {
+      titulo: 'Qué ofrecemos',
+      render: () => (
+        <>
+          {[
+            'Predicción de riesgo crediticio con IA',
+            'Historial y reportes descargables en PDF',
+            'Educación financiera personalizada',
+            'Seguimiento de tu evolución en el tiempo',
+          ].map((item) => (
+            <View key={item} style={styles.footerBullet}>
+              <Text style={[styles.footerBulletDot, { color: colors.textMuted }]}>•</Text>
+              <Text style={[styles.modalText, { color: colors.textSecondary, flex: 1, marginBottom: 0 }]}>{item}</Text>
+            </View>
+          ))}
+        </>
+      ),
+    },
+    soporte: {
+      titulo: 'Soporte al usuario',
+      render: () => (
+        <Text style={[styles.modalText, { color: colors.textSecondary }]}>
+          ¿Tienes dudas o problemas con tu cuenta? Escríbenos a soporte@creditosmart.unfv.edu.pe y te responderemos a la brevedad.
+        </Text>
+      ),
+    },
+  };
 
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
@@ -135,45 +204,21 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* Footer institucional */}
+      {/* Barra de texto clickeable (footer institucional) */}
       <View style={[styles.footerDivider, { borderTopColor: colors.divider }]} />
 
-      <TouchableOpacity style={styles.footerRow} onPress={() => setModalVisible(true)}>
-        <Text style={[styles.footerRowText, { color: colors.textSecondary }]}>¿Qué es el riesgo crediticio?</Text>
-        <Text style={[styles.footerArrow, { color: colors.textMuted }]}>→</Text>
-      </TouchableOpacity>
-
-      <View style={[styles.footerCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-        <Text style={[styles.footerTitle, { color: colors.textPrimary }]}>Quiénes somos</Text>
-        <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-          CreditoSmart es un proyecto académico de la Universidad Nacional Federico Villarreal, desarrollado para evaluar el riesgo crediticio mediante modelos de Machine Learning.
-        </Text>
-      </View>
-
-      <View style={[styles.footerCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
-        <Text style={[styles.footerTitle, { color: colors.textPrimary }]}>Qué ofrecemos</Text>
-        {[
-          'Predicción de riesgo crediticio con IA',
-          'Detección de fraude en registros',
-          'Educación financiera personalizada',
-          'Historial y reportes descargables',
-        ].map((item) => (
-          <View key={item} style={styles.footerBullet}>
-            <Text style={[styles.footerBulletDot, { color: colors.textMuted }]}>•</Text>
-            <Text style={[styles.footerText, { color: colors.textSecondary, flex: 1 }]}>{item}</Text>
-          </View>
+      <View style={styles.footerBar}>
+        {([
+          { key: 'riesgo', label: '¿Qué es el riesgo crediticio?' },
+          { key: 'quienes', label: 'Quiénes somos' },
+          { key: 'ofrecemos', label: 'Qué ofrecemos' },
+          { key: 'soporte', label: 'Soporte' },
+        ] as { key: Exclude<ModalKey, null>; label: string }[]).map(({ key, label }) => (
+          <TouchableOpacity key={key} onPress={() => setModalActivo(key)} style={styles.footerLinkBtn}>
+            <Text style={[styles.footerLinkText, { color: colors.textSecondary }]}>{label}</Text>
+          </TouchableOpacity>
         ))}
       </View>
-
-      <TouchableOpacity
-        style={[styles.footerCard, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
-        onPress={() => router.push('/(user)/configuracion' as any)}
-      >
-        <Text style={[styles.footerTitle, { color: colors.textPrimary }]}>Soporte al usuario</Text>
-        <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-          ¿Tienes dudas o problemas con tu cuenta? Escríbenos a soporte@creditosmart.unfv.edu.pe
-        </Text>
-      </TouchableOpacity>
 
       {/* Menú de la tuerquita */}
       <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
@@ -202,35 +247,24 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </Modal>
 
-      <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
+      {/* Modal generico para los links del footer, con X para cerrar */}
+      <Modal visible={modalActivo !== null} transparent animationType="slide" onRequestClose={() => setModalActivo(null)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>¿Qué es el riesgo crediticio?</Text>
-            <ScrollView style={{ maxHeight: 340 }}>
-              <Text style={[styles.modalText, { color: colors.textSecondary }]}>
-                El <Text style={[styles.bold, { color: colors.textPrimary }]}>riesgo crediticio</Text> es la probabilidad de que una persona no pueda cumplir con sus obligaciones financieras en el tiempo acordado.
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
+                {modalActivo ? modalesContenido[modalActivo].titulo : ''}
               </Text>
-              <Text style={[styles.modalText, { color: colors.textSecondary }]}>
-                En términos simples: es una medida de qué tan confiable eres financieramente ante una entidad bancaria o prestamista.
-              </Text>
-              <Text style={[styles.modalSubtitle, { color: colors.textPrimary }]}>¿Cómo se clasifica?</Text>
-              {[
-                { color: colors.success, label: 'Riesgo Bajo', desc: 'Buena salud financiera. Pagas a tiempo y tienes ingresos estables.' },
-                { color: colors.warning, label: 'Riesgo Medio', desc: 'Hay aspectos a mejorar. Puedes acceder a créditos, pero con más restricciones.' },
-                { color: colors.danger, label: 'Riesgo Alto', desc: 'Situación financiera delicada. Se recomienda tomar medidas para mejorar tu perfil.' },
-              ].map(({ color, label, desc }) => (
-                <View key={label} style={styles.modalRiesgoRow}>
-                  <View style={[styles.modalRiesgoDot, { backgroundColor: color }]} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.modalRiesgoLabel, { color: colors.textPrimary }]}>{label}</Text>
-                    <Text style={[styles.modalRiesgoDesc, { color: colors.textSecondary }]}>{desc}</Text>
-                  </View>
-                </View>
-              ))}
+              <TouchableOpacity
+                onPress={() => setModalActivo(null)}
+                style={[styles.modalCloseBtn, { backgroundColor: colors.input }]}
+              >
+                <Text style={[styles.modalCloseText, { color: colors.textPrimary }]}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ maxHeight: 360 }}>
+              {modalActivo ? modalesContenido[modalActivo].render() : null}
             </ScrollView>
-            <TouchableOpacity style={[styles.modalBtn, { backgroundColor: colors.primary }]} onPress={() => setModalVisible(false)}>
-              <Text style={styles.modalBtnText}>Entendido</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -256,21 +290,18 @@ const styles = StyleSheet.create({
   dotIndicator: { width: 8, height: 8, borderRadius: 4 },
   resultCategoria: { fontSize: 15, fontWeight: '600' },
   resultFecha: { fontSize: 12 },
-  accionesRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
-  accionBtn: { flex: 1, borderRadius: 12, borderWidth: 1, paddingVertical: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 },
-  accionIcon: { fontSize: 16 },
-  accionLabel: { fontSize: 13, fontWeight: '600' },
+  accionesRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+  accionBtn: { flex: 1, borderRadius: 16, borderWidth: 1, paddingVertical: 20, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  accionIcon: { fontSize: 22 },
+  accionLabel: { fontSize: 14, fontWeight: '600' },
   historialRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 9, borderBottomWidth: 1 },
   historialDot: { width: 7, height: 7, borderRadius: 3.5 },
   historialCategoria: { fontSize: 13, fontWeight: '500' },
   historialFecha: { fontSize: 11, marginTop: 1 },
-  footerDivider: { borderTopWidth: 1, marginTop: 8, marginBottom: 16 },
-  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, marginBottom: 4 },
-  footerRowText: { fontSize: 13, fontWeight: '500' },
-  footerArrow: { fontSize: 14 },
-  footerCard: { borderRadius: 14, borderWidth: 1, padding: 16, marginBottom: 12 },
-  footerTitle: { fontSize: 13, fontWeight: '700', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.3 },
-  footerText: { fontSize: 13, lineHeight: 19 },
+  footerDivider: { borderTopWidth: 1, marginTop: 8, marginBottom: 14 },
+  footerBar: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginBottom: 8 },
+  footerLinkBtn: { paddingVertical: 6 },
+  footerLinkText: { fontSize: 13, fontWeight: '500', textDecorationLine: 'underline' },
   footerBullet: { flexDirection: 'row', gap: 8, marginTop: 4 },
   footerBulletDot: { fontSize: 13 },
   menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'flex-start', alignItems: 'flex-end', paddingTop: 56, paddingRight: 20 },
@@ -279,7 +310,10 @@ const styles = StyleSheet.create({
   menuItemText: { fontSize: 14, fontWeight: '500' },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalCard: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24, maxHeight: '80%' },
-  modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 16 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  modalTitle: { fontSize: 18, fontWeight: '700', flex: 1 },
+  modalCloseBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginLeft: 12 },
+  modalCloseText: { fontSize: 16, fontWeight: '700' },
   modalText: { fontSize: 14, lineHeight: 21, marginBottom: 12 },
   modalSubtitle: { fontSize: 14, fontWeight: '700', marginBottom: 10, marginTop: 4 },
   modalRiesgoRow: { flexDirection: 'row', gap: 12, marginBottom: 12, alignItems: 'flex-start' },
@@ -287,6 +321,4 @@ const styles = StyleSheet.create({
   modalRiesgoLabel: { fontSize: 13, fontWeight: '700', marginBottom: 2 },
   modalRiesgoDesc: { fontSize: 12, lineHeight: 17 },
   bold: { fontWeight: '700' },
-  modalBtn: { borderRadius: 10, padding: 13, alignItems: 'center', marginTop: 16 },
-  modalBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });
