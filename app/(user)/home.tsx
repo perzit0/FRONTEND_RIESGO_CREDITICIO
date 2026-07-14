@@ -120,7 +120,7 @@ export default function HomeScreen() {
       titulo: 'Soporte al usuario',
       render: () => (
         <Text style={[styles.modalText, { color: colors.textSecondary }]}>
-          ¿Tienes dudas o problemas con tu cuenta? Escríbenos a soporte@creditosmart.unfv.edu.pe y te responderemos a la brevedad.
+          ¿Tienes dudas o problemas con tu cuenta? Escríbenos a percy19marceliano@gmail.com y te responderemos a la brevedad.
         </Text>
       ),
     },
@@ -168,7 +168,7 @@ export default function HomeScreen() {
           style={[styles.accionBtn, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}
           onPress={() => router.push('/(user)/formulario' as any)}
         >
-          <Text style={styles.accionIcon}>＋</Text>
+          <Text style={[styles.accionIcon, { color: colors.primary }]}>＋</Text>
           <Text style={[styles.accionLabel, { color: colors.textPrimary }]}>Nueva evaluación</Text>
         </TouchableOpacity>
         <TouchableOpacity

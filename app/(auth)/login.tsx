@@ -32,7 +32,11 @@ export default function LoginScreen() {
         router.replace('/(user)/home');
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'No se pudo iniciar sesión');
+      if (err.code === 'ECONNABORTED') {
+        setError('El servidor está iniciando (puede tardar hasta 40s). Intenta de nuevo en un momento.');
+      } else {
+        setError(err.response?.data?.error || 'No se pudo iniciar sesión');
+      }
     } finally {
       setLoading(false);
     }

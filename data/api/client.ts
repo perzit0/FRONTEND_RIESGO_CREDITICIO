@@ -6,7 +6,10 @@ export const BASE_URL = 'https://backend-riesgo-crediticio.onrender.com';
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,
+  // Render (plan gratis) suspende el servicio tras inactividad y el primer
+  // request puede tardar ~30-50s en "despertar". Con 15s el login fallaba
+  // por timeout en el arranque en frío. Subimos el margen a 40s.
+  timeout: 40000,
   headers: {
     'Content-Type': 'application/json',
   },
