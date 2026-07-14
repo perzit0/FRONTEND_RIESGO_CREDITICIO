@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 14, fontWeight: '500', marginBottom: 12 },
   title: { fontSize: 24, fontWeight: '700' },
   sub: { fontSize: 13, marginTop: 4 },
-  card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: 'transparent', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0, shadowRadius: 12, elevation: 0 },
   cardTitle: { fontSize: 15, fontWeight: '700', marginBottom: 8 },
   cardLabel: { fontSize: 12, fontWeight: '500', marginBottom: 8 },
   cardSub: { fontSize: 13, marginBottom: 14, lineHeight: 20 },

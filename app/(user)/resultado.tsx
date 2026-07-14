@@ -1,11 +1,10 @@
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, Platform
+  StyleSheet, Alert
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import Svg, { Path, Circle, Line, Text as SvgText } from 'react-native-svg';
-import { obtenerToken } from '../../storage/secureStorage';
-import { BASE_URL } from '../../data/api/client';
+import { descargarPdfAutenticado } from '../../data/api/descargarPdf';
 import { useTheme } from '../../context/ThemeContext';
 
 function Velocimetro({ scorePct, categoria, colors }: { scorePct: number, categoria: string, colors: any }) {
@@ -113,25 +112,12 @@ export default function ResultadoScreen() {
 
   async function handleDescargarPDF() {
     try {
-      const token = await obtenerToken();
       const evaluacionId = resultado.evaluacion_id;
-      const url = `${BASE_URL}/api/user/evaluacion/${evaluacionId}/pdf`;
-      if (Platform.OS === 'web') {
-        const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-        if (!response.ok) { Alert.alert('Error', 'No se pudo generar el PDF'); return; }
-        const blob = await response.blob();
-        const urlBlob = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = urlBlob;
-        link.download = `Reporte_Crediticio_${evaluacionId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(urlBlob);
-      } else {
-        const { Linking } = await import('react-native');
-        await Linking.openURL(url);
-      }
+      const ok = await descargarPdfAutenticado(
+        `/api/user/evaluacion/${evaluacionId}/pdf`,
+        `Reporte_Crediticio_${evaluacionId}.pdf`
+      );
+      if (!ok) Alert.alert('Error', 'No se pudo generar el PDF');
     } catch {
       Alert.alert('Error', 'No se pudo descargar el reporte');
     }
@@ -204,7 +190,7 @@ export default function ResultadoScreen() {
 const styles = StyleSheet.create({
   badge: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
   badgeText: { fontSize: 11, fontWeight: '600' },
-  card: { width: '100%', maxWidth: 480, borderRadius: 20, padding: 20, borderWidth: 1.5, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 16, elevation: 4, marginBottom: 14 },
+  card: { width: '100%', maxWidth: 480, borderRadius: 20, padding: 20, borderWidth: 1.5, shadowColor: 'transparent', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0, shadowRadius: 16, elevation: 0, marginBottom: 14 },
   cardTitle: { fontSize: 14, fontWeight: '700', marginBottom: 14 },
   resultLabel: { fontSize: 22, fontWeight: '700', marginTop: 4, marginBottom: 6 },
   resultDesc: { fontSize: 13, textAlign: 'center' },

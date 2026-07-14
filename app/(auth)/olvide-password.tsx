@@ -125,7 +125,7 @@ export default function OlvidePasswordScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { width: '100%', maxWidth: 400, borderRadius: 24, padding: 28, borderWidth: 1, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 24, elevation: 8 },
+  card: { width: '100%', maxWidth: 400, borderRadius: 24, padding: 28, borderWidth: 1, shadowColor: 'transparent', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0, shadowRadius: 24, elevation: 0 },
   backBtn: { marginBottom: 16 },
   backText: { fontSize: 14, fontWeight: '500' },
   iconWrap: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16, alignSelf: 'center' },

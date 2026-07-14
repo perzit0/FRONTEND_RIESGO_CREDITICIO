@@ -37,8 +37,13 @@ export default function FormularioScreen() {
     if (!datos1.edad || isNaN(edadNum) || edadNum < 18 || edadNum > 100) {
       Alert.alert('Error', 'Ingresa una edad válida (entre 18 y 100 años)'); return;
     }
-    if (!datos1.antiguedad_laboral_meses) {
-      Alert.alert('Error', 'Ingresa tu antigüedad laboral en meses (puede ser 0)'); return;
+    const antNum = Number(datos1.antiguedad_laboral_meses);
+    if (datos1.antiguedad_laboral_meses === '' || isNaN(antNum) || antNum < 0 || antNum > 720) {
+      Alert.alert('Error', 'Ingresa una antigüedad laboral válida en meses (0 a 720)'); return;
+    }
+    const depNum = Number(datos1.num_dependientes_hogar);
+    if (isNaN(depNum) || depNum < 0 || depNum > 20) {
+      Alert.alert('Error', 'El número de dependientes debe estar entre 0 y 20'); return;
     }
     setPaso(2);
   }
@@ -59,9 +64,33 @@ export default function FormularioScreen() {
   }
 
   async function handleAnalizar() {
-    if (!datos2.ingreso_mensual || !datos2.monto_en_bancos || !datos2.num_cuentas_bancarias) {
-      Alert.alert('Error', 'Completa los campos obligatorios'); return;
+    // Validación robusta: nada de campos vacíos, negativos ni ingreso 0.
+    const ingreso = Number(datos2.ingreso_mensual);
+    const monto = Number(datos2.monto_en_bancos);
+    const cuentas = Number(datos2.num_cuentas_bancarias);
+    const deuda = Number(datos2.deuda_mensual);
+
+    if (!datos2.ingreso_mensual || isNaN(ingreso) || ingreso <= 0) {
+      Alert.alert('Error', 'El ingreso mensual debe ser un número mayor a 0'); return;
     }
+    if (datos2.monto_en_bancos === '' || isNaN(monto) || monto < 0) {
+      Alert.alert('Error', 'El monto en bancos no puede ser negativo'); return;
+    }
+    if (datos2.num_cuentas_bancarias === '' || isNaN(cuentas) || cuentas < 0 || !Number.isInteger(cuentas)) {
+      Alert.alert('Error', 'El número de cuentas debe ser un entero igual o mayor a 0'); return;
+    }
+    if (isNaN(deuda) || deuda < 0) {
+      Alert.alert('Error', 'La deuda mensual no puede ser negativa'); return;
+    }
+    if (tuvoCredito === true) {
+      const historial = Number(datos2.anios_historial_crediticio);
+      const mora = Number(datos2.dias_mora_historico);
+      const creditos = Number(datos2.num_creditos_previos);
+      if ([historial, mora, creditos].some(v => isNaN(v) || v < 0)) {
+        Alert.alert('Error', 'Los datos de crédito (créditos, mora, historial) no pueden ser negativos'); return;
+      }
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -182,6 +211,29 @@ export default function FormularioScreen() {
                 </View>
               ))}
 
+              {(() => {
+                const ing = Number(datos2.ingreso_mensual);
+                const deu = Number(datos2.deuda_mensual);
+                if (!ing || ing <= 0 || isNaN(deu) || deu < 0) return null;
+                const ratio = deu / ing;
+                const pct = Math.round(ratio * 100);
+                let color = colors.success, texto = 'Endeudamiento saludable';
+                if (ratio >= 0.35) { color = colors.danger; texto = 'Endeudamiento alto'; }
+                else if (ratio >= 0.2) { color = colors.warning; texto = 'Endeudamiento moderado'; }
+                return (
+                  <View style={[styles.ratioBox, { backgroundColor: colors.input, borderColor: color + '55' }]}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <Text style={[styles.ratioLabel, { color: colors.textSecondary }]}>Ratio deuda / ingreso</Text>
+                      <Text style={[styles.ratioPct, { color }]}>{pct}%</Text>
+                    </View>
+                    <View style={[styles.ratioTrack, { backgroundColor: colors.inputBorder }]}>
+                      <View style={[styles.ratioFill, { width: `${Math.min(100, pct)}%`, backgroundColor: color }]} />
+                    </View>
+                    <Text style={[styles.ratioTexto, { color }]}>{texto}</Text>
+                  </View>
+                );
+              })()}
+
               {tuvoCredito === true && (
                 <>
                   {[
@@ -234,7 +286,7 @@ export default function FormularioScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { width: '100%', maxWidth: 480, borderRadius: 24, padding: 28, borderWidth: 1, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 24, elevation: 8, marginVertical: 24 },
+  card: { width: '100%', maxWidth: 480, borderRadius: 24, padding: 28, borderWidth: 1, shadowColor: 'transparent', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0, shadowRadius: 24, elevation: 0, marginVertical: 24 },
   headerTitle: { fontSize: 15, fontWeight: '700', marginBottom: 20 },
   stepWrap: { flexDirection: 'row', alignItems: 'center', marginBottom: 24 },
   stepDot: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
@@ -249,6 +301,12 @@ const styles = StyleSheet.create({
   optionText: { fontSize: 13 },
   infoBox: { borderRadius: 10, borderWidth: 1, padding: 12, marginBottom: 16 },
   infoBoxText: { fontSize: 12, lineHeight: 18 },
+  ratioBox: { borderRadius: 10, borderWidth: 1, padding: 12, marginBottom: 16 },
+  ratioLabel: { fontSize: 12, fontWeight: '600' },
+  ratioPct: { fontSize: 15, fontWeight: '800' },
+  ratioTrack: { height: 7, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
+  ratioFill: { height: 7, borderRadius: 4 },
+  ratioTexto: { fontSize: 11, fontWeight: '600' },
   rowBtns: { flexDirection: 'row', gap: 10, marginTop: 4 },
   btnPrimary: { borderRadius: 12, padding: 14, alignItems: 'center' },
   btnPrimaryText: { color: '#fff', fontSize: 15, fontWeight: '700' },

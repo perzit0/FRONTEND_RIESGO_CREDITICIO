@@ -4,10 +4,8 @@ import {
   StyleSheet, ActivityIndicator, Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
-import apiClient, { BASE_URL } from '../../data/api/client';
-import { obtenerToken } from '../../storage/secureStorage';
+import apiClient from '../../data/api/client';
+import { descargarPdfAutenticado } from '../../data/api/descargarPdf';
 import { useTheme } from '../../context/ThemeContext';
 
 const ETIQUETAS: Record<string, string> = {
@@ -57,25 +55,13 @@ export default function HistorialScreen() {
   async function handleDescargarPdf(evaluacionId: number, fecha: string) {
     setDescargandoId(evaluacionId);
     try {
-      const token = await obtenerToken();
       const fechaArchivo = fecha.split('T')[0];
-      const fileUri = FileSystem.documentDirectory + `reporte_riesgo_${fechaArchivo}.pdf`;
-
-      const resultado = await FileSystem.downloadAsync(
-        `${BASE_URL}/api/user/evaluacion/${evaluacionId}/pdf`,
-        fileUri,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const ok = await descargarPdfAutenticado(
+        `/api/user/evaluacion/${evaluacionId}/pdf`,
+        `reporte_riesgo_${fechaArchivo}.pdf`
       );
-
-      if (resultado.status !== 200) {
-        throw new Error('No se pudo descargar el PDF');
-      }
-
-      const puedeCompartir = await Sharing.isAvailableAsync();
-      if (puedeCompartir) {
-        await Sharing.shareAsync(resultado.uri, { mimeType: 'application/pdf' });
-      } else {
-        Alert.alert('Descargado', `PDF guardado en: ${resultado.uri}`);
+      if (!ok) {
+        Alert.alert('Error', 'No se pudo descargar el reporte. Intenta nuevamente.');
       }
     } catch (err) {
       Alert.alert('Error', 'No se pudo descargar el reporte. Intenta nuevamente.');

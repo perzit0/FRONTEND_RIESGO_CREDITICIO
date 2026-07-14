@@ -55,7 +55,6 @@ function AppNavegador() {
         <Stack.Screen name="(auth)/login" />
         <Stack.Screen name="(auth)/registro" />
         <Stack.Screen name="(auth)/verificar-correo" />
-        <Stack.Screen name="(auth)/verificar-sms" />
         <Stack.Screen name="(auth)/olvide-password" />
         <Stack.Screen name="(user)/home" />
         <Stack.Screen name="(user)/formulario" />

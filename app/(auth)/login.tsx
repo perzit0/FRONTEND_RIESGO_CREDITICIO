@@ -111,7 +111,7 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { width: '100%', maxWidth: 400, borderRadius: 24, padding: 32, borderWidth: 1, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 24, elevation: 8 },
+  card: { width: '100%', maxWidth: 400, borderRadius: 24, padding: 32, borderWidth: 1, shadowColor: 'transparent', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0, shadowRadius: 24, elevation: 0 },
   logoWrap: { alignItems: 'center', marginBottom: 28 },
   logoImg: { width: 220, height: 80 },
   logoSub: { fontSize: 12, marginTop: 8 },

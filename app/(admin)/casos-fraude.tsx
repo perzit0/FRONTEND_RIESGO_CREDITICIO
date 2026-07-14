@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
   countWrap: { flexDirection: 'row', marginBottom: 16 },
   countBadge: { borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 6 },
   countText: { fontSize: 12, fontWeight: '700' },
-  card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: 'transparent', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0, shadowRadius: 12, elevation: 0 },
   emptyWrap: { alignItems: 'center', paddingVertical: 32 },
   emptyIcon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
   emptyIconText: { fontSize: 28 },

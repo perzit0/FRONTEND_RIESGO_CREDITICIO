@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   backText: { fontSize: 14, fontWeight: '500', marginBottom: 12 },
   title: { fontSize: 24, fontWeight: '700' },
   sub: { fontSize: 13, marginTop: 4 },
-  card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: 'transparent', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0, shadowRadius: 12, elevation: 0 },
   cardTitle: { fontSize: 15, fontWeight: '700', marginBottom: 16 },
   totalLabel: { fontSize: 13, fontWeight: '500', marginBottom: 6 },
   totalNum: { fontSize: 40, fontWeight: '700' },
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   leyendaDot: { width: 10, height: 10, borderRadius: 5 },
   leyendaText: { fontSize: 12, fontWeight: '500' },
   tarjetasGrid: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  tarjeta: { flex: 1, borderRadius: 14, padding: 14, borderWidth: 1.5, borderTopWidth: 3, alignItems: 'center', shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
+  tarjeta: { flex: 1, borderRadius: 14, padding: 14, borderWidth: 1.5, borderTopWidth: 3, alignItems: 'center', shadowColor: 'transparent', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0, shadowRadius: 8, elevation: 0 },
   tarjetaNum: { fontSize: 28, fontWeight: '700', marginBottom: 4 },
   tarjetaLabel: { fontSize: 11, textAlign: 'center', lineHeight: 16 },
 });

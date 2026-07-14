@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   navActive: {},
   navText: { fontSize: 13, fontWeight: '500' },
   navTextActive: { color: '#fff', fontWeight: '600' },
-  card: { borderRadius: 16, padding: 20, borderWidth: 1.5, borderTopWidth: 3, marginBottom: 16, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  card: { borderRadius: 16, padding: 20, borderWidth: 1.5, borderTopWidth: 3, marginBottom: 16, shadowColor: 'transparent', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0, shadowRadius: 12, elevation: 0 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
   iconWrap: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   iconText: { fontSize: 22 },

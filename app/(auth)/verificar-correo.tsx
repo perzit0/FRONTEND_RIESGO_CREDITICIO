@@ -78,7 +78,7 @@ export default function VerificarCorreoScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { width: '100%', maxWidth: 400, borderRadius: 24, padding: 28, borderWidth: 1, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.1, shadowRadius: 24, elevation: 8, alignItems: 'center' },
+  card: { width: '100%', maxWidth: 400, borderRadius: 24, padding: 28, borderWidth: 1, shadowColor: 'transparent', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0, shadowRadius: 24, elevation: 0, alignItems: 'center' },
   iconWrap: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   icon: { fontSize: 28 },
   title: { fontSize: 22, fontWeight: '700', textAlign: 'center', marginBottom: 6 },

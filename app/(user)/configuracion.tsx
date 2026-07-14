@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 13, textAlign: 'center' },
   exitoBox: { borderWidth: 1, borderRadius: 10, padding: 12, marginBottom: 14 },
   exitoText: { fontSize: 13, textAlign: 'center' },
-  card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: '#6B4EFF', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 },
+  card: { borderRadius: 16, padding: 18, borderWidth: 1.5, marginBottom: 14, shadowColor: 'transparent', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0, shadowRadius: 12, elevation: 0 },
   cardTitle: { fontSize: 15, fontWeight: '700', marginBottom: 14 },
   cardSub: { fontSize: 13, marginBottom: 16, lineHeight: 20 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1 },
