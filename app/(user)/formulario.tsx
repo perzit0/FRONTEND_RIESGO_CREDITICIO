@@ -8,25 +8,26 @@ import { useRouter } from 'expo-router';
 import apiClient from '../../data/api/client';
 import { useTheme } from '../../context/ThemeContext';
 
+// El formulario pide EXCLUSIVAMENTE los datos que el modelo de IA utiliza:
+//   edad, ingreso_mensual, tipo_vivienda, antiguedad_laboral_meses,
+//   deuda_mensual, dias_mora_historico, anios_historial_crediticio.
+// Se eliminaron tipo_empleo, dependientes, monto en bancos, número de
+// cuentas y créditos previos porque el modelo no los usa.
+
 export default function FormularioScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const [paso, setPaso] = useState(1);
   const [loading, setLoading] = useState(false);
-
-  // Pregunta previa: si nunca ha tenido credito, autocompletamos los
-  // campos relacionados en 0 para no pedirle datos que no tiene.
   const [tuvoCredito, setTuvoCredito] = useState<boolean | null>(null);
 
   const [datos1, setDatos1] = useState({
-    edad: '', tipo_empleo: 'dependiente', antiguedad_laboral_meses: '',
-    tipo_vivienda: 'propia', num_dependientes_hogar: '0',
+    edad: '', antiguedad_laboral_meses: '', tipo_vivienda: 'propia',
   });
 
   const [datos2, setDatos2] = useState({
-    ingreso_mensual: '', monto_en_bancos: '', num_cuentas_bancarias: '',
-    num_creditos_previos: '0', dias_mora_historico: '0',
-    deuda_mensual: '0', anios_historial_crediticio: '0',
+    ingreso_mensual: '', deuda_mensual: '0',
+    dias_mora_historico: '0', anios_historial_crediticio: '0',
   });
 
   function update1(field: string, value: string) { setDatos1(prev => ({ ...prev, [field]: value })); }
@@ -41,43 +42,23 @@ export default function FormularioScreen() {
     if (datos1.antiguedad_laboral_meses === '' || isNaN(antNum) || antNum < 0 || antNum > 720) {
       Alert.alert('Error', 'Ingresa una antigüedad laboral válida en meses (0 a 720)'); return;
     }
-    const depNum = Number(datos1.num_dependientes_hogar);
-    if (isNaN(depNum) || depNum < 0 || depNum > 20) {
-      Alert.alert('Error', 'El número de dependientes debe estar entre 0 y 20'); return;
-    }
     setPaso(2);
   }
 
   function handleSeleccionCredito(tuvo: boolean) {
     setTuvoCredito(tuvo);
     if (!tuvo) {
-      // Autocompletar: si nunca tuvo credito, estos campos quedan en 0
-      // y no se le vuelven a pedir, para que el modelo reciba datos
-      // coherentes en vez de "basura" o campos vacios.
-      setDatos2(prev => ({
-        ...prev,
-        num_creditos_previos: '0',
-        dias_mora_historico: '0',
-        anios_historial_crediticio: '0',
-      }));
+      // Si nunca tuvo crédito, mora e historial quedan en 0 y no se le piden.
+      setDatos2(prev => ({ ...prev, dias_mora_historico: '0', anios_historial_crediticio: '0' }));
     }
   }
 
   async function handleAnalizar() {
-    // Validación robusta: nada de campos vacíos, negativos ni ingreso 0.
     const ingreso = Number(datos2.ingreso_mensual);
-    const monto = Number(datos2.monto_en_bancos);
-    const cuentas = Number(datos2.num_cuentas_bancarias);
     const deuda = Number(datos2.deuda_mensual);
 
     if (!datos2.ingreso_mensual || isNaN(ingreso) || ingreso <= 0) {
       Alert.alert('Error', 'El ingreso mensual debe ser un número mayor a 0'); return;
-    }
-    if (datos2.monto_en_bancos === '' || isNaN(monto) || monto < 0) {
-      Alert.alert('Error', 'El monto en bancos no puede ser negativo'); return;
-    }
-    if (datos2.num_cuentas_bancarias === '' || isNaN(cuentas) || cuentas < 0 || !Number.isInteger(cuentas)) {
-      Alert.alert('Error', 'El número de cuentas debe ser un entero igual o mayor a 0'); return;
     }
     if (isNaN(deuda) || deuda < 0) {
       Alert.alert('Error', 'La deuda mensual no puede ser negativa'); return;
@@ -85,25 +66,20 @@ export default function FormularioScreen() {
     if (tuvoCredito === true) {
       const historial = Number(datos2.anios_historial_crediticio);
       const mora = Number(datos2.dias_mora_historico);
-      const creditos = Number(datos2.num_creditos_previos);
-      if ([historial, mora, creditos].some(v => isNaN(v) || v < 0)) {
-        Alert.alert('Error', 'Los datos de crédito (créditos, mora, historial) no pueden ser negativos'); return;
+      if ([historial, mora].some(v => isNaN(v) || v < 0)) {
+        Alert.alert('Error', 'Los datos de crédito (mora e historial) no pueden ser negativos'); return;
       }
     }
 
     setLoading(true);
     try {
       const payload = {
-        ...datos1, ...datos2,
         edad: Number(datos1.edad),
         antiguedad_laboral_meses: Number(datos1.antiguedad_laboral_meses),
-        num_dependientes_hogar: Number(datos1.num_dependientes_hogar),
-        ingreso_mensual: Number(datos2.ingreso_mensual),
-        monto_en_bancos: Number(datos2.monto_en_bancos),
-        num_cuentas_bancarias: Number(datos2.num_cuentas_bancarias),
-        num_creditos_previos: Number(datos2.num_creditos_previos),
+        tipo_vivienda: datos1.tipo_vivienda,
+        ingreso_mensual: ingreso,
+        deuda_mensual: deuda,
         dias_mora_historico: Number(datos2.dias_mora_historico),
-        deuda_mensual: Number(datos2.deuda_mensual),
         anios_historial_crediticio: Number(datos2.anios_historial_crediticio),
       };
       const res = await apiClient.post('/api/user/evaluar-riesgo', payload);
@@ -159,16 +135,6 @@ export default function FormularioScreen() {
               <Text style={[styles.label, { color: colors.textLabel }]}>Antigüedad laboral (meses) *</Text>
               <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.inputBorder, color: colors.textPrimary }]} placeholder="Ej: 36" placeholderTextColor={colors.textMuted} keyboardType="numeric" value={datos1.antiguedad_laboral_meses} onChangeText={v => update1('antiguedad_laboral_meses', v)} />
 
-              <Text style={[styles.label, { color: colors.textLabel }]}>Número de dependientes</Text>
-              <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.inputBorder, color: colors.textPrimary }]} placeholder="0" placeholderTextColor={colors.textMuted} keyboardType="numeric" value={datos1.num_dependientes_hogar} onChangeText={v => update1('num_dependientes_hogar', v)} />
-
-              <Text style={[styles.label, { color: colors.textLabel }]}>Tipo de empleo</Text>
-              <View style={styles.optionGroup}>
-                {['dependiente', 'independiente', 'desempleado'].map(op => (
-                  <Opcion key={op} selected={datos1.tipo_empleo === op} onPress={() => update1('tipo_empleo', op)} label={op.charAt(0).toUpperCase() + op.slice(1)} />
-                ))}
-              </View>
-
               <Text style={[styles.label, { color: colors.textLabel }]}>Tipo de vivienda</Text>
               <View style={styles.optionGroup}>
                 {['propia', 'alquilada', 'familiar'].map(op => (
@@ -185,7 +151,7 @@ export default function FormularioScreen() {
           {paso === 2 && (
             <View>
               <Text style={[styles.title, { color: colors.textPrimary }]}>Datos financieros</Text>
-              <Text style={[styles.sub, { color: colors.textSecondary }]}>Información bancaria y crediticia</Text>
+              <Text style={[styles.sub, { color: colors.textSecondary }]}>Ingresos y comportamiento crediticio</Text>
 
               <Text style={[styles.label, { color: colors.textLabel }]}>¿Has tenido un crédito antes? *</Text>
               <View style={styles.optionGroup}>
@@ -195,8 +161,6 @@ export default function FormularioScreen() {
 
               {[
                 { label: 'Ingresos mensuales (S/.) *', field: 'ingreso_mensual', ph: 'Ej: 3500' },
-                { label: 'Monto total en cuentas bancarias (S/.) *', field: 'monto_en_bancos', ph: 'Ej: 8000' },
-                { label: 'Número de cuentas bancarias *', field: 'num_cuentas_bancarias', ph: 'Ej: 2' },
                 { label: 'Deuda mensual (S/.)', field: 'deuda_mensual', ph: 'Ej: 800' },
               ].map(({ label, field, ph }) => (
                 <View key={field}>
@@ -237,7 +201,6 @@ export default function FormularioScreen() {
               {tuvoCredito === true && (
                 <>
                   {[
-                    { label: 'Créditos previos', field: 'num_creditos_previos', ph: '0' },
                     { label: 'Días de mora histórico', field: 'dias_mora_historico', ph: '0' },
                     { label: 'Años de historial crediticio', field: 'anios_historial_crediticio', ph: 'Ej: 3' },
                   ].map(({ label, field, ph }) => (
@@ -258,7 +221,7 @@ export default function FormularioScreen() {
               {tuvoCredito === false && (
                 <View style={[styles.infoBox, { backgroundColor: colors.input, borderColor: colors.inputBorder }]}>
                   <Text style={[styles.infoBoxText, { color: colors.textSecondary }]}>
-                    Como no has tenido créditos antes, no necesitas llenar créditos previos, mora ni historial crediticio — quedan en 0 automáticamente.
+                    Como no has tenido créditos antes, mora e historial quedan en 0 automáticamente.
                   </Text>
                 </View>
               )}

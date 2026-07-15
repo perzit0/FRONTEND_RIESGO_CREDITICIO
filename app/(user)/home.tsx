@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, Modal
+  StyleSheet, ActivityIndicator, Modal, RefreshControl
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import apiClient from '../../data/api/client';
 import { cerrarSesion } from '../../storage/secureStorage';
 import { useTheme } from '../../context/ThemeContext';
+import ConsejoDelDia from '../../components/ConsejoDelDia';
+import ComparativaComunidad from '../../components/ComparativaComunidad';
 
 type ModalKey = 'riesgo' | 'quienes' | 'ofrecemos' | 'soporte' | null;
 
@@ -18,19 +20,29 @@ export default function HomeScreen() {
   const [historial, setHistorial] = useState<any[]>([]);
   const [modalActivo, setModalActivo] = useState<ModalKey>(null);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [comunidad, setComunidad] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => { cargarDatos(); }, []);
 
   async function cargarDatos() {
     try {
-      const [perfilRes, historialRes] = await Promise.all([
+      const [perfilRes, historialRes, comunidadRes] = await Promise.all([
         apiClient.get('/api/user/mi-perfil'),
         apiClient.get('/api/user/mi-historial'),
+        apiClient.get('/api/user/comunidad'),
       ]);
       setPerfil(perfilRes.data);
       setHistorial(historialRes.data);
+      setComunidad(comunidadRes.data);
     } catch { }
     finally { setLoading(false); }
+  }
+
+  async function onRefresh() {
+    setRefreshing(true);
+    await cargarDatos();
+    setRefreshing(false);
   }
 
   async function handleCerrarSesion() {
@@ -127,7 +139,13 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={styles.scroll}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={styles.scroll}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
+      }
+    >
 
       <View style={styles.header}>
         <View>
@@ -151,10 +169,14 @@ export default function HomeScreen() {
                 Riesgo {ultimaEval.categoria_riesgo.charAt(0).toUpperCase() + ultimaEval.categoria_riesgo.slice(1)}
               </Text>
             </View>
-            <Text style={[styles.resultFecha, { color: colors.textMuted }]}>
-              {new Date(ultimaEval.fecha).toLocaleDateString('es-PE')}
+            <Text style={[styles.resultScore, { color: getColorCat(ultimaEval.categoria_riesgo) }]}>
+              {((ultimaEval.score_final ?? 0) * 100).toFixed(0)}
+              <Text style={[styles.resultScoreMax, { color: colors.textMuted }]}> /100</Text>
             </Text>
           </View>
+          <Text style={[styles.resultFecha, { color: colors.textMuted, marginTop: 6 }]}>
+            Evaluado el {new Date(ultimaEval.fecha).toLocaleDateString('es-PE')}
+          </Text>
         </View>
       ) : (
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
@@ -179,6 +201,43 @@ export default function HomeScreen() {
           <Text style={[styles.accionLabel, { color: colors.textPrimary }]}>Mi meta</Text>
         </TouchableOpacity>
       </View>
+
+      {historial.length > 0 && (() => {
+        const scores = historial.map((e: any) => (e.score_final ?? 0) * 100);
+        const mejor = Math.min(...scores);
+        // historial[0] es la mas reciente
+        const tendencia = historial.length >= 2 ? scores[0] - scores[1] : null;
+        const stats = [
+          { valor: String(historial.length), label: 'Evaluaciones', color: colors.textPrimary },
+          { valor: mejor.toFixed(0), label: 'Mejor score', color: colors.success },
+          {
+            valor: tendencia == null ? '—' : `${tendencia > 0 ? '↑' : tendencia < 0 ? '↓' : '='}${Math.abs(tendencia).toFixed(0)}`,
+            label: 'Última variación',
+            color: tendencia == null ? colors.textMuted : tendencia < 0 ? colors.success : tendencia > 0 ? colors.danger : colors.textMuted,
+          },
+        ];
+        return (
+          <View style={styles.statsRow}>
+            {stats.map(({ valor, label, color }) => (
+              <View key={label} style={[styles.statBox, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
+                <Text style={[styles.statValor, { color }]}>{valor}</Text>
+                <Text style={[styles.statLabel, { color: colors.textMuted }]}>{label}</Text>
+              </View>
+            ))}
+          </View>
+        );
+      })()}
+
+      {comunidad && (
+        <ComparativaComunidad
+          miScore={comunidad.mi_score}
+          scorePromedio={comunidad.score_promedio}
+          mejorQuePct={comunidad.mejor_que_pct}
+          totalPersonas={comunidad.total_personas}
+        />
+      )}
+
+      <ConsejoDelDia />
 
       {historial.length > 0 && (
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.cardBorder }]}>
@@ -290,6 +349,12 @@ const styles = StyleSheet.create({
   dotIndicator: { width: 8, height: 8, borderRadius: 4 },
   resultCategoria: { fontSize: 15, fontWeight: '600' },
   resultFecha: { fontSize: 12 },
+  resultScore: { fontSize: 22, fontWeight: '800' },
+  resultScoreMax: { fontSize: 12, fontWeight: '500' },
+  statsRow: { flexDirection: 'row', gap: 10, marginBottom: 12 },
+  statBox: { flex: 1, borderRadius: 14, borderWidth: 1, paddingVertical: 14, alignItems: 'center' },
+  statValor: { fontSize: 20, fontWeight: '800', marginBottom: 3 },
+  statLabel: { fontSize: 10, textAlign: 'center' },
   accionesRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   accionBtn: { flex: 1, borderRadius: 16, borderWidth: 1, paddingVertical: 20, alignItems: 'center', justifyContent: 'center', gap: 6 },
   accionIcon: { fontSize: 22 },

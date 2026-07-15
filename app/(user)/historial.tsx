@@ -8,19 +8,15 @@ import apiClient from '../../data/api/client';
 import { descargarPdfAutenticado } from '../../data/api/descargarPdf';
 import { useTheme } from '../../context/ThemeContext';
 
+// Solo los 7 datos que el modelo de IA usa como features.
 const ETIQUETAS: Record<string, string> = {
-  ingreso_mensual: 'Ingreso mensual',
-  num_creditos_previos: 'Créditos previos',
-  dias_mora_historico: 'Días de mora histórico',
-  monto_en_bancos: 'Monto en bancos',
-  num_cuentas_bancarias: 'Cuentas bancarias',
-  deuda_mensual: 'Deuda mensual',
-  anios_historial_crediticio: 'Años de historial crediticio',
   edad: 'Edad',
-  antiguedad_laboral_meses: 'Antigüedad laboral (meses)',
-  tipo_empleo: 'Tipo de empleo',
+  ingreso_mensual: 'Ingreso mensual',
   tipo_vivienda: 'Tipo de vivienda',
-  num_dependientes_hogar: 'Dependientes',
+  antiguedad_laboral_meses: 'Antigüedad laboral (meses)',
+  deuda_mensual: 'Deuda mensual',
+  dias_mora_historico: 'Días de mora histórico',
+  anios_historial_crediticio: 'Años de historial crediticio',
 };
 
 export default function HistorialScreen() {
@@ -72,7 +68,7 @@ export default function HistorialScreen() {
 
   function formatearValor(key: string, value: any) {
     if (value === null || value === undefined) return '—';
-    if (key === 'ingreso_mensual' || key === 'monto_en_bancos' || key === 'deuda_mensual') {
+    if (key === 'ingreso_mensual' || key === 'deuda_mensual') {
       return `S/ ${Number(value).toLocaleString('es-PE')}`;
     }
     return String(value);
